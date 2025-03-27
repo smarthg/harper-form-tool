@@ -242,6 +242,25 @@ const FormEditor = () => {
     }
   };
 
+  // Handle form data mapped from company data via AI
+  const handleFormDataMapped = (mappedFormData: FormDataType) => {
+    toast({
+      title: "Form Updated with AI",
+      description: "Form data has been intelligently filled with company information.",
+    });
+    
+    // Add an activity entry for AI mapping
+    const activityItem: ActivityItem = {
+      id: Date.now().toString(),
+      command: "AI Mapping",
+      field: "multiple fields",
+      value: "Company data mapped to form",
+      timestamp: new Date(),
+    };
+    
+    setActivityLog((prev) => [activityItem, ...prev]);
+  };
+  
   // Set selected company from form data when it loads
   useEffect(() => {
     if (formData?.companyId && formData.companyId !== selectedCompanyId) {
@@ -310,6 +329,8 @@ const FormEditor = () => {
           <CompanySelector
             selectedCompanyId={selectedCompanyId}
             onCompanyChange={handleCompanyChange}
+            onFormDataMapped={handleFormDataMapped}
+            formType="acord125"
           />
           <FormUploadModal />
         </div>

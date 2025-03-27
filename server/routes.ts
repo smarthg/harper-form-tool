@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import multer from 'multer';
 import { getFormDefinition, getFormData, updateFormData } from "./formData";
+import { mapCompanyDataToForm, initializeOpenAI } from "./services/formMappingService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
@@ -278,6 +279,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Map company data to form fields using OpenAI
+  app.post('/api/companies/:id/map-to-form/:formType', requireAuth, async (req, res) => {
+    try {
+      const companyId = parseInt(req.params.id);
+      const formType = req.params.formType;
+      const { apiKey } = req.body;
+      
+      if (isNaN(companyId)) {
+        return res.status(400).json({ message: 'Invalid company ID' });
+      }
+      
+      if (!formType) {
+        return res.status(400).json({ message: 'Form type is required' });
+      }
+      
+      // Initialize OpenAI with provided API key if any
+      if (apiKey) {
+        initializeOpenAI(apiKey);
+      } else {
+        // Use environment variable if available
+        initializeOpenAI(process.env.OPENAI_API_KEY || '');
+      }
+      
+      // Get company details
+      const company = await storage.getCompany(companyId);
+      if (!company) {
+        return res.status(404).json({ message: 'Company not found' });
+      }
+      
+      // Fetch detailed company information from external API
+      const companyDetails = await storage.getCompanyDetailedInfo(companyId);
+      
+      // Get form definition for the specified form type
+      const formDefinition = await getFormDefinition(formType);
+      
+      // Map company data to form fields
+      const mappedFormData = await mapCompanyDataToForm(companyDetails, formDefinition);
+      
+      // Update the form data with the mapped values
+      const updatedFormData = await updateFormData(formType, mappedFormData);
+      
+      res.json({
+        message: 'Company data successfully mapped to form fields',
+        mappedFields: Object.keys(mappedFormData),
+        formData: updatedFormData
+      });
+      
+    } catch (error) {
+      console.error(`Error mapping company data to form:`, error);
+      res.status(500).json({ 
+        message: 'Failed to map company data to form fields',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
