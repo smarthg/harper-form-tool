@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { formDataSchema } from "@shared/schema";
 import { z } from "zod";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
+import multer from 'multer';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
@@ -11,6 +12,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Define auth middleware for protected routes
   const requireAuth = ClerkExpressRequireAuth();
+  
+  // Configure multer for file uploads
+  const upload = multer({
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Only accept PDF files
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed'));
+      }
+    }
+  });
 
   // Public health check endpoint
   app.get("/api/health", (req, res) => {
@@ -65,6 +81,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ message: "Failed to update form data" });
+    }
+  });
+  
+  // Upload and process a form
+  app.post('/api/upload-form', requireAuth, upload.single('formFile'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      // Extract data from the uploaded PDF
+      const extractedData = await storage.extractFormData(req.file.buffer);
+      
+      // Check if any data was extracted
+      if (Object.keys(extractedData).length === 0) {
+        return res.status(422).json({ 
+          message: 'No data could be extracted from the uploaded form',
+          extractedData 
+        });
+      }
+      
+      res.json({ 
+        message: 'Form data extracted successfully',
+        extractedData
+      });
+    } catch (error) {
+      console.error('Error processing uploaded form:', error);
+      res.status(500).json({ message: 'Failed to process the uploaded form' });
+    }
+  });
+  
+  // Transpose extracted data to the form
+  app.post('/api/transpose-form', requireAuth, async (req, res) => {
+    try {
+      const { extractedData } = req.body;
+      
+      if (!extractedData || Object.keys(extractedData).length === 0) {
+        return res.status(400).json({ message: 'No extracted data provided' });
+      }
+      
+      // Transpose the extracted data onto the form
+      const updatedFormData = await storage.transposeFormData(extractedData);
+      
+      res.json({
+        message: 'Form data transposed successfully',
+        formData: updatedFormData
+      });
+    } catch (error) {
+      console.error('Error transposing form data:', error);
+      res.status(500).json({ message: 'Failed to transpose form data' });
     }
   });
 

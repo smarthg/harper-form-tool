@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import InsuranceForm from "@/components/InsuranceForm";
 import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
+import FormUploadModal from "@/components/FormUploadModal";
 import { FormDataType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -35,12 +36,13 @@ const FormEditor = () => {
     mutationFn: async (
       updates: { field: string; value: string }
     ): Promise<FormDataType> => {
-      const response = await apiRequest(
-        "PATCH",
-        "/api/form-data",
-        { [updates.field]: updates.value }
-      );
-      return response.json();
+      return apiRequest<FormDataType>("/api/form-data", {
+        method: "PATCH",
+        body: JSON.stringify({ [updates.field]: updates.value }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/form-data"] });
@@ -139,13 +141,16 @@ const FormEditor = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-500 font-sans">
-          Voice-Driven Form Editor
-        </h1>
-        <p className="text-neutral-400">
-          Edit form fields using natural voice commands
-        </p>
+      <header className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-500 font-sans">
+            Voice-Driven Form Editor
+          </h1>
+          <p className="text-neutral-400">
+            Edit form fields using natural voice commands
+          </p>
+        </div>
+        <FormUploadModal />
       </header>
 
       <div className="lg:flex gap-6">
