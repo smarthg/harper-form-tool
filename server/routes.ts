@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { formDataSchema } from "@shared/schema";
+import { formDataSchema, companySchema } from "@shared/schema";
 import { z } from "zod";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import multer from 'multer';
@@ -31,6 +31,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+  
+  // Get all companies
+  app.get("/api/companies", requireAuth, async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+  
+  // Get a specific company by ID
+  app.get("/api/companies/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+      
+      const company = await storage.getCompany(id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      res.json(company);
+    } catch (error) {
+      console.error("Error fetching company:", error);
+      res.status(500).json({ message: "Failed to fetch company" });
+    }
+  });
+  
+  // Refresh companies from external API
+  app.post("/api/companies/refresh", requireAuth, async (req, res) => {
+    try {
+      const companies = await storage.fetchCompaniesFromApi();
+      res.json({
+        message: "Companies refreshed successfully",
+        companies
+      });
+    } catch (error) {
+      console.error("Error refreshing companies:", error);
+      res.status(500).json({ message: "Failed to refresh companies" });
+    }
   });
 
   // Protected routes

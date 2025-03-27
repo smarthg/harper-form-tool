@@ -5,6 +5,7 @@ import InsuranceForm from "@/components/InsuranceForm";
 import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
 import FormUploadModal from "@/components/FormUploadModal";
+import CompanySelector from "@/components/CompanySelector";
 import { FormDataType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -22,6 +23,7 @@ const FormEditor = () => {
   const [transcript, setTranscript] = useState("");
   const [highlightedField, setHighlightedField] = useState<string | null>(null);
   const [activityLog, setActivityLog] = useState<ActivityItem[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | undefined>(undefined);
   const [lastCommand, setLastCommand] = useState<{
     type: "success" | "error";
     message: string;
@@ -32,13 +34,19 @@ const FormEditor = () => {
     queryKey: ["/api/form-data"],
   });
 
+  // Update form data mutation (includes company selection)
   const updateFormMutation = useMutation({
     mutationFn: async (
-      updates: { field: string; value: string }
+      updates: { field: string; value: string } | Partial<FormDataType>
     ): Promise<FormDataType> => {
+      // If it's a field/value pair, convert to object format
+      const updateData = 'field' in updates 
+        ? { [updates.field]: updates.value } 
+        : updates;
+        
       return apiRequest<FormDataType>("/api/form-data", {
         method: "PATCH",
-        body: JSON.stringify({ [updates.field]: updates.value }),
+        body: JSON.stringify(updateData),
         headers: {
           "Content-Type": "application/json"
         }
@@ -55,6 +63,19 @@ const FormEditor = () => {
       });
     },
   });
+
+  // Handle company selection change
+  const handleCompanyChange = (companyId: number) => {
+    setSelectedCompanyId(companyId);
+    
+    // Update the form data with the selected company
+    updateFormMutation.mutate({ companyId });
+    
+    toast({
+      title: "Company selected",
+      description: "Form is now associated with the selected company.",
+    });
+  };
 
   const handleFieldUpdate = async (
     field: string,
@@ -94,6 +115,13 @@ const FormEditor = () => {
     }
   };
 
+  // Set selected company from form data when it loads
+  useEffect(() => {
+    if (formData?.companyId && formData.companyId !== selectedCompanyId) {
+      setSelectedCompanyId(formData.companyId);
+    }
+  }, [formData, selectedCompanyId]);
+
   // Helper function to get field label for display
   const getFieldLabel = (fieldId: string): string => {
     const labels: Record<string, string> = {
@@ -109,6 +137,7 @@ const FormEditor = () => {
       deductible: "Deductible",
       coverageType: "Coverage Type",
       monthlyPremium: "Monthly Premium",
+      companyId: "Company",
     };
     return labels[fieldId] || fieldId;
   };
@@ -141,7 +170,7 @@ const FormEditor = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <header className="mb-8 flex justify-between items-end">
+      <header className="mb-6 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-neutral-500 font-sans">
             Voice-Driven Form Editor
@@ -150,7 +179,13 @@ const FormEditor = () => {
             Edit form fields using natural voice commands
           </p>
         </div>
-        <FormUploadModal />
+        <div className="flex items-center gap-3">
+          <CompanySelector
+            selectedCompanyId={selectedCompanyId}
+            onCompanyChange={handleCompanyChange}
+          />
+          <FormUploadModal />
+        </div>
       </header>
 
       <div className="lg:flex gap-6">

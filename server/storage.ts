@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, type FormData, type FormDataType } from "@shared/schema";
+import { users, type User, type InsertUser, type FormData, type FormDataType, type Company, type InsertCompany } from "@shared/schema";
 import { formDataSchema } from "@shared/schema";
 import { LlamaParse } from 'llama-parse';
 
@@ -44,6 +44,11 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
+  // Company methods
+  getCompanies(): Promise<Company[]>;
+  getCompany(id: number): Promise<Company | undefined>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  
   // Form data methods
   initializeFormData(): Promise<FormDataType>;
   getFormData(): Promise<FormDataType>;
@@ -52,16 +57,23 @@ export interface IStorage {
   // Form extraction methods
   extractFormData(fileBuffer: Buffer): Promise<Partial<FormDataType>>;
   transposeFormData(extractedData: Partial<FormDataType>): Promise<FormDataType>;
+  
+  // External API methods
+  fetchCompaniesFromApi(): Promise<Company[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
+  private companies: Map<number, Company>;
   private formData: FormDataType;
   currentId: number;
+  currentCompanyId: number;
 
   constructor() {
     this.users = new Map();
+    this.companies = new Map();
     this.currentId = 1;
+    this.currentCompanyId = 1;
     this.formData = { ...defaultFormData };
   }
 
@@ -80,6 +92,72 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async getCompanies(): Promise<Company[]> {
+    // If we don't have any companies yet, try to fetch them
+    if (this.companies.size === 0) {
+      try {
+        await this.fetchCompaniesFromApi();
+      } catch (error) {
+        console.error("Error fetching companies from API:", error);
+      }
+    }
+    return Array.from(this.companies.values());
+  }
+
+  async getCompany(id: number): Promise<Company | undefined> {
+    return this.companies.get(id);
+  }
+
+  async createCompany(company: InsertCompany): Promise<Company> {
+    const id = this.currentCompanyId++;
+    const newCompany: Company = { ...company, id };
+    this.companies.set(id, newCompany);
+    return newCompany;
+  }
+
+  async fetchCompaniesFromApi(): Promise<Company[]> {
+    try {
+      console.log('Fetching companies from external API');
+      const response = await fetch('https://tatch.retool.com/url/company-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Workflow-Api-Key': 'retool_wk_a6eac56e17da4f889098cf01b70d8a61'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (Array.isArray(data)) {
+        // Clear existing companies
+        this.companies.clear();
+        
+        // Store the companies in our map
+        data.forEach((item, index) => {
+          const company: Company = {
+            id: index + 1,
+            name: item.name || `Company ${index + 1}`,
+            code: item.code || `CODE${index + 1}`
+          };
+          this.companies.set(company.id, company);
+        });
+
+        this.currentCompanyId = this.companies.size + 1;
+        
+        return Array.from(this.companies.values());
+      } else {
+        throw new Error('Invalid data format received from API');
+      }
+    } catch (error) {
+      console.error('Error fetching companies from API:', error);
+      throw error;
+    }
   }
 
   async initializeFormData(): Promise<FormDataType> {

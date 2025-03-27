@@ -8,6 +8,12 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+export const companies = pgTable("companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(),
+});
+
 export const formData = pgTable("form_data", {
   id: serial("id").primaryKey(),
   firstName: text("first_name").notNull(),
@@ -22,11 +28,16 @@ export const formData = pgTable("form_data", {
   deductible: text("deductible").notNull(),
   coverageType: text("coverage_type").notNull(),
   monthlyPremium: text("monthly_premium").notNull(),
+  companyId: integer("company_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+});
+
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
 });
 
 export const insertFormDataSchema = createInsertSchema(formData).omit({
@@ -46,10 +57,19 @@ export const formDataSchema = z.object({
   deductible: z.string(),
   coverageType: z.string(),
   monthlyPremium: z.string(),
+  companyId: z.number().optional(),
+});
+
+export const companySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  code: z.string(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Company = typeof companies.$inferSelect;
 export type InsertFormData = z.infer<typeof insertFormDataSchema>;
 export type FormData = typeof formData.$inferSelect;
 export type FormDataType = z.infer<typeof formDataSchema>;
