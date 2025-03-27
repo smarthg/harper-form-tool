@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Download } from "lucide-react";
 import { FormDataType } from "@shared/schema";
 import { generateInsurancePDF, downloadPDF } from "@/lib/pdfGenerator";
+import { useToast } from "@/hooks/use-toast";
 
 interface FormDownloadButtonProps {
   formData: FormDataType;
@@ -10,33 +10,47 @@ interface FormDownloadButtonProps {
 }
 
 const FormDownloadButton = ({ formData, className = "" }: FormDownloadButtonProps) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     try {
-      setIsGenerating(true);
+      // Generate the PDF document
       const doc = generateInsurancePDF(formData);
-      downloadPDF(doc, `insurance-policy-${formData.policyNumber}.pdf`);
+      
+      // Generate a filename with current date
+      const date = new Date().toLocaleDateString().replace(/\//g, '-');
+      const filename = `insurance-policy-${date}.pdf`;
+      
+      // Download the PDF
+      downloadPDF(doc, filename);
+      
+      // Show success message
+      toast({
+        title: "PDF Downloaded",
+        description: "Your insurance policy has been downloaded as a PDF file.",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Error generating PDF:", error);
-    } finally {
-      setIsGenerating(false);
+      
+      // Show error message
+      toast({
+        title: "Download Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   };
 
   return (
     <Button 
-      onClick={handleDownload} 
-      className={`${className} flex items-center gap-2`}
-      disabled={isGenerating}
-      variant="outline"
+      onClick={handleDownload}
+      className={`flex items-center gap-2 ${className}`}
+      variant="default"
     >
-      {isGenerating ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        <Download className="h-4 w-4" />
-      )}
-      Download Completed Form
+      <Download className="h-4 w-4" />
+      <span>Download Form</span>
     </Button>
   );
 };

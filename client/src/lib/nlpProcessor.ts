@@ -1,4 +1,7 @@
-import { fieldDefinitions } from "./fieldDefinitions";
+import { fieldDefinitions } from './fieldDefinitions';
+
+// Command verbs that indicate a change request
+const commandVerbs = ['change', 'update', 'set', 'modify', 'make', 'please', 'can you'];
 
 type CommandResult = {
   field: string;
@@ -11,43 +14,19 @@ type CommandResult = {
  * @returns Object with field and value, or null if command cannot be understood
  */
 export function processCommand(command: string): CommandResult {
-  command = command.toLowerCase().trim();
+  const normalizedCommand = command.toLowerCase().trim();
   
-  // Common action phrases that indicate a field update
-  const actionPhrases = [
-    "update", "change", "set", "modify", "make", "put"
-  ];
+  // Try to find a matching field
+  const targetField = findTargetField(normalizedCommand);
+  if (!targetField) return null;
   
-  let actionFound = false;
-  for (const action of actionPhrases) {
-    if (command.includes(action)) {
-      actionFound = true;
-      break;
-    }
-  }
-  
-  if (!actionFound) {
-    console.log("No action phrase found in command");
-    return null;
-  }
-  
-  const field = findTargetField(command);
-  if (!field) {
-    console.log("No field found in command");
-    return null;
-  }
-  
-  const value = extractValue(command, field);
-  if (!value) {
-    console.log("No value found in command");
-    return null;
-  }
-  
-  const formattedValue = formatValue(field.id, value);
+  // Extract the value for the field
+  const value = extractValue(normalizedCommand, targetField);
+  if (!value) return null;
   
   return {
-    field: field.id,
-    value: formattedValue
+    field: targetField.id,
+    value: formatValue(targetField.id, value)
   };
 }
 
@@ -55,20 +34,14 @@ export function processCommand(command: string): CommandResult {
  * Find the field that the command is targeting
  */
 function findTargetField(command: string) {
+  // Look for field names in the command
   for (const field of fieldDefinitions) {
-    // Check for exact field name
-    if (command.includes(field.id.toLowerCase())) {
-      return field;
-    }
+    const allNames = [field.id, ...field.aliases];
     
-    // Check for display name
-    if (command.includes(field.displayName.toLowerCase())) {
-      return field;
-    }
-    
-    // Check for aliases
-    if (field.aliases && field.aliases.some(alias => command.includes(alias.toLowerCase()))) {
-      return field;
+    for (const name of allNames) {
+      if (command.includes(name.toLowerCase())) {
+        return field;
+      }
     }
   }
   
@@ -78,25 +51,54 @@ function findTargetField(command: string) {
 /**
  * Extract the value that should be set for the field
  */
-function extractValue(command: string, field: {id: string, displayName: string, aliases?: string[]}): string | null {
-  // Look for phrases like "to", "as", "with" followed by the value
-  const valueIndicators = ["to", "as", "with", "is"];
+function extractValue(command: string, field: typeof fieldDefinitions[0]): string | null {
+  // Check common patterns like "to X" or "as X"
+  const prepositions = ['to', 'as', 'with', 'for'];
   
-  for (const indicator of valueIndicators) {
-    const indicatorPattern = new RegExp(`(${indicator}\\s+)(.+)`, 'i');
-    const match = command.match(indicatorPattern);
-    
-    if (match && match[2]) {
-      return match[2].trim();
+  const allFieldTerms = [field.id, ...field.aliases];
+  
+  for (const fieldTerm of allFieldTerms) {
+    if (command.includes(fieldTerm)) {
+      for (const prep of prepositions) {
+        const regex = new RegExp(`${fieldTerm}\\s+(?:${prep}\\s+)(.+?)(?:\\s|$|\\.|,)`, 'i');
+        const match = command.match(regex);
+        
+        if (match && match[1]) {
+          return match[1].trim();
+        }
+      }
+      
+      // Try another pattern: "fieldName X"
+      const afterFieldRegex = new RegExp(`${fieldTerm}\\s+(.+?)(?:\\s|$|\\.|,)`, 'i');
+      const afterMatch = command.match(afterFieldRegex);
+      
+      if (afterMatch && afterMatch[1]) {
+        const value = afterMatch[1].trim();
+        if (!commandVerbs.some(v => value.startsWith(v))) {
+          return value;
+        }
+      }
     }
   }
   
-  // Simple pattern matching - look for the field name and take what comes after it
-  const fieldPattern = new RegExp(`(${field.id}|${field.displayName.toLowerCase()})(\\s+)(.+)`, 'i');
-  const match = command.match(fieldPattern);
-  
-  if (match && match[3]) {
-    return match[3].trim();
+  // Look for patterns like "change X to Y" or "set X to Y"
+  for (const fieldTerm of allFieldTerms) {
+    for (const prep of prepositions) {
+      const regex = new RegExp(`(?:${commandVerbs.join('|')})\\s+(?:.*?\\s+)?(?:${fieldTerm})\\s+(?:${prep}\\s+)?(.+?)(?:\\s|$|\\.|,)`, 'i');
+      const match = command.match(regex);
+      
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+  }
+
+  // Try to find value after "to" if the field is mentioned before
+  if (command.includes(field.id) || field.aliases.some(alias => command.includes(alias))) {
+    const toIndex = command.indexOf(" to ");
+    if (toIndex > 0) {
+      return command.substring(toIndex + 4).trim();
+    }
   }
   
   return null;
@@ -106,48 +108,46 @@ function extractValue(command: string, field: {id: string, displayName: string, 
  * Format the extracted value based on the field type
  */
 function formatValue(fieldId: string, value: string): string {
-  // Remove any punctuation at the end
-  value = value.replace(/[.!?]$/, '');
+  // Strip any currency symbols
+  if (fieldId === 'coverageAmount' || fieldId === 'deductible' || fieldId === 'monthlyPremium') {
+    return value.replace(/^\$/, '').trim();
+  }
   
-  // Format based on field type
-  switch (fieldId) {
-    case 'email':
-      // Ensure email has proper formatting
-      value = value.replace(/\s+at\s+/g, '@');
-      value = value.replace(/\s+dot\s+/g, '.');
-      break;
-      
-    case 'phone':
-      // Format phone numbers consistently
-      value = value.replace(/[^\d]/g, '');
-      if (value.length === 10) {
-        value = `(${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6)}`;
-      }
-      break;
-      
-    case 'startDate':
-    case 'endDate':
-      // Try to convert spoken date to ISO format
-      try {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          value = date.toISOString().split('T')[0];
-        }
-      } catch (e) {
-        // Keep original value if date parsing fails
-      }
-      break;
-      
-    case 'coverageAmount':
-    case 'deductible':
-    case 'monthlyPremium':
-      // Format currency values
-      value = value.replace(/dollars/g, '');
-      // Add dollar sign if not present
-      if (!value.includes('$')) {
-        value = '$' + value;
-      }
-      break;
+  // Handle policy type special case
+  if (fieldId === 'policyType') {
+    const policyTypes: Record<string, string> = {
+      'home': 'home',
+      'home insurance': 'home',
+      'house': 'home',
+      'auto': 'auto',
+      'car': 'auto',
+      'automobile': 'auto', 
+      'auto insurance': 'auto',
+      'car insurance': 'auto',
+      'life': 'life',
+      'life insurance': 'life',
+      'health': 'health',
+      'health insurance': 'health',
+      'medical': 'health',
+      'medical insurance': 'health'
+    };
+    
+    const normalizedValue = value.toLowerCase();
+    return policyTypes[normalizedValue] || value;
+  }
+  
+  // Handle coverage type special case
+  if (fieldId === 'coverageType') {
+    const coverageTypes: Record<string, string> = {
+      'comprehensive': 'comprehensive',
+      'collision': 'collision',
+      'liability': 'liability',
+      'uninsured': 'uninsured',
+      'uninsured motorist': 'uninsured'
+    };
+    
+    const normalizedValue = value.toLowerCase();
+    return coverageTypes[normalizedValue] || value;
   }
   
   return value;

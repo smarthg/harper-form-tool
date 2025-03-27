@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import InsuranceForm from "@/components/InsuranceForm";
 import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
-import AuthHeader from "@/components/AuthHeader";
 import { FormDataType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -139,40 +138,36 @@ const FormEditor = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <AuthHeader />
-      
-      <div className="container mx-auto px-4 py-8 max-w-5xl flex-1">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-500 font-sans">
-            Voice-Driven Form Editor
-          </h1>
-          <p className="text-neutral-400">
-            Edit form fields using natural voice commands
-          </p>
-        </header>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-neutral-500 font-sans">
+          Voice-Driven Form Editor
+        </h1>
+        <p className="text-neutral-400">
+          Edit form fields using natural voice commands
+        </p>
+      </header>
 
-        <div className="lg:flex gap-6">
-          <div className="lg:w-2/3">
-            <InsuranceForm
-              formData={formData}
-              highlightedField={highlightedField}
-              isPending={updateFormMutation.isPending}
-            />
-          </div>
+      <div className="lg:flex gap-6">
+        <div className="lg:w-2/3">
+          <InsuranceForm
+            formData={formData}
+            highlightedField={highlightedField}
+            isPending={updateFormMutation.isPending}
+          />
+        </div>
 
-          <div className="lg:w-1/3">
-            <VoiceInterface
-              isListening={isListening}
-              setIsListening={setIsListening}
-              transcript={transcript}
-              setTranscript={setTranscript}
-              onCommand={handleFieldUpdate}
-              lastCommand={lastCommand}
-            />
+        <div className="lg:w-1/3">
+          <VoiceInterface
+            isListening={isListening}
+            setIsListening={setIsListening}
+            transcript={transcript}
+            setTranscript={setTranscript}
+            onCommand={handleFieldUpdate}
+            lastCommand={lastCommand}
+          />
 
-            <ActivityLog activities={activityLog} getFieldLabel={getFieldLabel} />
-          </div>
+          <ActivityLog activities={activityLog} getFieldLabel={getFieldLabel} />
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
 
 interface ActivityItem {
   id: string;
@@ -15,52 +14,35 @@ interface ActivityLogProps {
 }
 
 const ActivityLog = ({ activities, getFieldLabel }: ActivityLogProps) => {
-  if (activities.length === 0) {
-    return (
-      <Card className="mt-6">
-        <CardHeader className="pb-3">
-          <CardTitle>Activity Log</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-neutral-500">
-            No activity yet. Use voice commands to update the form.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="mt-6">
-      <CardHeader className="pb-3">
-        <CardTitle>Activity Log</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[250px] pr-4">
-          <div className="space-y-4">
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                className="p-3 border border-neutral-100 rounded-md bg-neutral-50"
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <div className="font-medium text-sm">{getFieldLabel(activity.field)}</div>
-                  <div className="text-xs text-neutral-400">
-                    {new Date(activity.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-                <div className="text-xs text-neutral-500 mb-2 italic">"{activity.command}"</div>
-                <div className="flex gap-3 items-center">
-                  <div className="text-sm">
-                    <span className="font-medium">New value:</span> {activity.value}
-                  </div>
-                </div>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-medium text-neutral-500 mb-4">Activity Log</h2>
+      
+      <div className="space-y-3 max-h-[300px] overflow-y-auto">
+        {activities.length === 0 ? (
+          <p className="text-sm text-neutral-300 text-center italic">Command history will appear here</p>
+        ) : (
+          activities.map((activity) => (
+            <div key={activity.id} className="p-3 bg-neutral-100 rounded-lg animate-slide-in">
+              <div className="flex justify-between items-start mb-1">
+                <span className="text-sm font-medium text-neutral-400">
+                  {getFieldLabel(activity.field)} updated
+                </span>
+                <span className="text-xs text-neutral-300">
+                  {activity.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+              <p className="text-xs text-neutral-300">
+                Value set to: <span className="font-medium text-neutral-400">{activity.value}</span>
+              </p>
+              <p className="text-xs italic text-neutral-300 mt-1">
+                "{activity.command}"
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   );
 };
 
