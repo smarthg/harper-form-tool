@@ -15,8 +15,17 @@ import SignUp from "@/pages/SignUp";
 function Router() {
   return (
     <Switch>
+      {/* Auth routes */}
       <Route path="/sign-in" component={SignIn} />
       <Route path="/sign-up" component={SignUp} />
+      
+      {/* Clerk callback routes */}
+      <Route path="/sign-in/sso-callback">
+        <SignIn />
+      </Route>
+      <Route path="/sign-up/sso-callback">
+        <SignUp />
+      </Route>
       
       {/* Protected routes */}
       <Route path="/">
