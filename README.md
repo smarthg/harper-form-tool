@@ -7,7 +7,7 @@ A modern web application that enables users to edit form fields in real-time usi
 ## Features
 
 - **Voice Command Recognition**: Edit form fields naturally by speaking commands like "Set the policy type to home" or "Change the coverage amount to $500,000"
-- **PDF Form Extraction**: Upload existing insurance PDF forms to automatically extract and populate form data
+- **PDF Form Generation**: Export the completed form data as a professional insurance PDF document
 - **Real-time Form Updates**: See immediate updates to form fields as you speak commands
 - **Command History**: View a log of all voice commands and changes made to the form
 - **Form Download**: Export the completed form as a professionally formatted PDF document
@@ -18,20 +18,20 @@ A modern web application that enables users to edit form fields in real-time usi
 
 - **Frontend**: React with TypeScript, Tailwind CSS, shadcn/ui components
 - **Backend**: Express.js server with in-memory storage
-- **PDF Processing**: LlamaParse for intelligent PDF extraction with pdf-parse fallback
+- **PDF Generation**: Anvil API and jsPDF for creating downloadable insurance forms
 - **Voice Recognition**: Browser's Web Speech API with OpenAI transcription fallback
 - **NLP Processing**: Custom natural language processing for command interpretation
 - **Authentication**: Clerk for user management
 - **Data Management**: React Query for efficient data fetching and caching
-- **PDF Generation**: jsPDF for creating downloadable insurance forms
+
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 20 or higher
-- OpenAI API key (optional, for enhanced voice recognition)
-- LlamaParse API key (optional, for enhanced PDF extraction)
+- OpenAI API key (optional, for enhanced voice recognition and company data mapping)
+- Anvil API key (for PDF form generation)
 - Clerk account for authentication
 
 ### Environment Setup
@@ -43,11 +43,11 @@ Create a `.env` file in the root directory with the following variables:
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 
-# Optional: OpenAI for enhanced transcription
+# Optional: OpenAI for enhanced transcription and form field mapping
 OPENAI_API_KEY=your_openai_api_key
 
-# Optional: LlamaParse for enhanced PDF extraction
-LLAMAPARSE_API_KEY=your_llamaparse_api_key
+# Required for PDF form generation
+ANVIL_API_KEY=your_anvil_api_key
 ```
 
 ### Installation
@@ -82,12 +82,7 @@ The application understands a variety of natural language commands. Here are som
 - "Make the deductible $500"
 - "Set the start date to January 1st, 2025"
 
-### Uploading PDF Forms
 
-1. Click the "Upload Form" button in the top right corner
-2. Select a PDF insurance form from your device
-3. Review the extracted data
-4. Click "Apply Changes" to populate the form with the extracted data
 
 ### Exporting Forms
 
@@ -101,8 +96,10 @@ The application understands a variety of natural language commands. Here are som
 
 - `GET /api/form-data`: Retrieve the current form data
 - `PATCH /api/form-data`: Update form data
-- `POST /api/upload-form`: Upload and process a PDF form
-- `POST /api/transpose-form`: Apply extracted form data to the current form
+- `POST /api/fill-pdf`: Generate a filled PDF form with the current form data
+- `GET /api/form-definitions/:formType`: Get form definition for a specific form type
+- `GET /api/form-data/:formType`: Get form data for a specific form type
+- `PATCH /api/form-data/:formType`: Update form data for a specific form type
 
 ## Development
 
@@ -129,7 +126,7 @@ The application understands a variety of natural language commands. Here are som
 1. Update the schema in `shared/schema.ts`
 2. Add the field to `fieldDefinitions.ts` with appropriate aliases
 3. Update `InsuranceForm.tsx` to include the new field
-4. Add extraction logic in `storage.ts` if using PDF extraction
+4. Update form field references in related components
 
 ## Contributing
 
@@ -148,6 +145,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Acknowledgments
 
 - [OpenAI](https://openai.com/) - For API integration with advanced AI capabilities
-- [LlamaParse](https://llamaparse.com/) - For intelligent PDF extraction
+- [Anvil API](https://www.useanvil.com/) - For PDF form generation and filling
 - [Clerk](https://clerk.dev/) - For authentication services
 - [shadcn/ui](https://ui.shadcn.com/) - For beautiful, accessible UI components

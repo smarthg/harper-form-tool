@@ -107,43 +107,11 @@ Update specific fields in the form data.
 - `401 Unauthorized`: Authentication required
 - `500 Internal Server Error`: Server error
 
-### PDF Form Processing
+### PDF Form Generation
 
-#### `POST /api/upload-form`
+#### `POST /api/fill-pdf`
 
-Upload and process a PDF form to extract form data.
-
-**Authentication Required**: Yes
-
-**Request Body**:
-- Content-Type: `multipart/form-data`
-- Form field: `file` (PDF file)
-
-**Response**:
-
-```json
-{
-  "message": "Form data extracted successfully",
-  "extractedData": {
-    "firstName": "John",
-    "lastName": "Smith",
-    "email": "john.smith@example.com",
-    "policyNumber": "POL-123456"
-    // Other extracted fields...
-  }
-}
-```
-
-**Status Codes**:
-- `200 OK`: Form processed successfully
-- `400 Bad Request`: Invalid file or file type
-- `401 Unauthorized`: Authentication required
-- `413 Payload Too Large`: File exceeds size limit (5MB)
-- `500 Internal Server Error`: Server error
-
-#### `POST /api/transpose-form`
-
-Apply extracted form data to the current form.
+Fill a PDF form with current form data.
 
 **Authentication Required**: Yes
 
@@ -151,43 +119,32 @@ Apply extracted form data to the current form.
 
 ```json
 {
-  "extractedData": {
-    "firstName": "John",
-    "lastName": "Smith",
-    "email": "john.smith@example.com",
-    "policyNumber": "POL-123456"
-    // Other extracted fields...
-  }
-}
-```
-
-**Response**:
-
-```json
-{
-  "message": "Form data transposed successfully",
   "formData": {
-    "firstName": "John",
-    "lastName": "Smith",
-    "email": "john.smith@example.com",
-    "phone": "",
-    "policyType": "",
-    "policyNumber": "POL-123456",
-    "startDate": "",
-    "endDate": "",
-    "coverageAmount": "",
-    "deductible": "",
-    "coverageType": "",
-    "monthlyPremium": ""
+    "title": "ACORD 125",
+    "data": {
+      "namedInsured": "Example Company",
+      "businessPhone": "555-123-4567",
+      // Other form fields...
+    }
   }
 }
 ```
 
+**Response**:
+
+```json
+{
+  "message": "PDF filled successfully",
+  "pdfUrl": "/uploads/acord125_filled_1234567890.pdf"
+}
+```
+
 **Status Codes**:
-- `200 OK`: Form data transposed successfully
-- `400 Bad Request`: Invalid request body
+- `200 OK`: PDF filled successfully
+- `400 Bad Request`: Invalid request body or missing API key
 - `401 Unauthorized`: Authentication required
 - `500 Internal Server Error`: Server error
+
 
 ## Error Response Format
 

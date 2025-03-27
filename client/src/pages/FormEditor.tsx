@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import InsuranceForm from "@/components/InsuranceForm";
 import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
-import FormUploadModal from "@/components/FormUploadModal";
 import CompanySelector from "@/components/CompanySelector";
 import CompanyDetails from "@/components/CompanyDetails";
 import { FormDataType } from "@shared/schema";
@@ -373,7 +372,6 @@ const FormEditor = () => {
             onFormDataMapped={handleFormDataMapped}
             formType="acord125"
           />
-          <FormUploadModal />
         </div>
       </header>
 
