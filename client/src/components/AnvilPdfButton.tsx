@@ -8,9 +8,10 @@ import { FileTextIcon, Loader2Icon, DownloadIcon } from 'lucide-react';
 interface AnvilPdfButtonProps {
   formData: FormDataType;
   className?: string;
+  formType?: 'acord125' | 'acord126';
 }
 
-const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
+const AnvilPdfButton = ({ formData, className = '', formType = 'acord125' }: AnvilPdfButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -20,15 +21,24 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
     try {
       setIsLoading(true);
       
+      // Form name for display purposes
+      const formName = formType === 'acord126' ? 'ACORD 126' : 'ACORD 125';
+      
       // Show a generating toast
       toast({
         title: 'Generating PDF...',
-        description: 'Preparing your ACORD 125 form with Anvil API',
+        description: `Preparing your ${formName} form with Anvil API`,
         variant: 'default',
       });
       
+      // Add form type to the data for server-side processing
+      const dataWithFormType = {
+        ...formData,
+        formType: formType
+      };
+      
       // Use Anvil to fill the PDF with the updated mapping structure
-      const url = await fillPdfWithAnvil(formData);
+      const url = await fillPdfWithAnvil(dataWithFormType);
       
       // Store the URL and mark as generated
       setPdfUrl(url);
@@ -39,7 +49,7 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
       
       toast({
         title: 'PDF filled successfully',
-        description: 'Your ACORD 125 form has been generated and opened in a new tab.',
+        description: `Your ${formName} form has been generated and opened in a new tab.`,
         variant: 'default',
       });
     } catch (error) {
@@ -59,16 +69,20 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
   const handleDownload = () => {
     if (!pdfUrl) return;
     
+    // Form name for display and filename
+    const formName = formType === 'acord126' ? 'ACORD 126' : 'ACORD 125';
+    const fileName = formType === 'acord126' ? 'acord126.pdf' : 'acord125.pdf';
+    
     const link = document.createElement('a');
     link.href = pdfUrl;
-    link.download = 'acord125.pdf';
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     toast({
       title: 'PDF downloaded',
-      description: 'Your ACORD 125 form has been downloaded.',
+      description: `Your ${formName} form has been downloaded.`,
       variant: 'default',
     });
   };
@@ -76,6 +90,9 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
   // Only disable the button while loading
   const shouldDisable = isLoading;
 
+  // Form name for button display
+  const formName = formType === 'acord126' ? 'ACORD 126' : 'ACORD 125';
+  
   return (
     <div className="flex gap-2">
       <Button
@@ -83,14 +100,14 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
         className={`${className} gap-2`}
         disabled={shouldDisable}
         variant="default"
-        title={"Generate ACORD 125 PDF"}
+        title={`Generate ${formName} PDF`}
       >
         {isLoading ? (
           <Loader2Icon className="h-4 w-4 animate-spin" />
         ) : (
           <FileTextIcon className="h-4 w-4" />
         )}
-        Generate ACORD 125
+        Generate {formName}
       </Button>
       
       {isGenerated && pdfUrl && (

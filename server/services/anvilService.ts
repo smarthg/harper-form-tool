@@ -36,9 +36,10 @@ export function isAnvilInitialized(): boolean {
 /**
  * Fill a PDF form using Anvil API
  * @param data The data to fill the form with
+ * @param formType Optional form type to specify which template to use
  * @returns The filled PDF as a Buffer
  */
-export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
+export async function fillPdf(data: Record<string, any>, formType?: string): Promise<Buffer> {
   if (!anvilClient) {
     if (!process.env.ANVIL_API_KEY) {
       throw new Error('Anvil API key not configured. Please set ANVIL_API_KEY in .env file.');
@@ -57,9 +58,14 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
       anvilData = data;
       console.log('Using pre-formatted data from client');
     } else {
-      // Map the data to Anvil format
-      anvilData = mapDataToAnvilFormat(data);
-      console.log('Using server-side data mapping');
+      // Map the data to Anvil format based on form type
+      if (formType === 'acord126' || data.formType === 'acord126') {
+        anvilData = mapAcord126DataToAnvilFormat(data);
+        console.log('Using ACORD 126 server-side data mapping');
+      } else {
+        anvilData = mapDataToAnvilFormat(data);
+        console.log('Using ACORD 125 server-side data mapping');
+      }
     }
     
     // Log the data for debugging
@@ -67,7 +73,9 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
       `Title: ${anvilData.title}, Data fields: ${Object.keys(anvilData.data).length}`);
     
     // Create a simpler payload with just the template ID and the data
-    const templateId = 'gfCWlUgpFz7Bvpb84Obw';
+    // Default template ID for ACORD 125, but can be overridden for ACORD 126
+    const formTypeToUse = formType || data.formType || 'acord125';
+    const templateId = formTypeToUse === 'acord126' ? 'QQ7LjLk2gAjhPIS6MbnW' : 'gfCWlUgpFz7Bvpb84Obw';
     
     try {
       console.log('Attempting to fill PDF with Anvil using template ID:', templateId);
@@ -124,10 +132,10 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
  * @param filledPdf The filled PDF buffer
  * @returns The URL to download the filled PDF
  */
-export function storePdfTemporarily(filledPdf: Buffer): string {
+export function storePdfTemporarily(filledPdf: Buffer, formType: string = 'acord125'): string {
   // Create a unique filename with timestamp
   const timestamp = new Date().getTime();
-  const filename = `acord125_filled_${timestamp}.pdf`;
+  const filename = `${formType}_filled_${timestamp}.pdf`;
   
   // Create directory if it doesn't exist
   const uploadDir = path.join(currentDirPath, '../../client/public/uploads');
@@ -148,15 +156,22 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
 /**
  * Map form data to Anvil's expected format for PDF filling
  * @param data Form data from the application
- * @returns Data formatted for Anvil PDF filling
+ * @returns Data formatted for Anvil PDF filling for ACORD 125
  */
 function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
   // Create a structure that exactly matches the Anvil example payload
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   
-  // If the data is already in Anvil format, use it directly
-  if (data.title === "Acord 125" && data.data) {
+  // Check for pre-formatted data or specific form type
+  if (data.title && data.data) {
     console.log("Using pre-formatted data with Anvil template structure");
+    return data;
+  }
+  
+  // If this is ACORD 126 data, don't try to map it here
+  // The main fillPdf function will handle it with the correct template ID
+  if (data.formType === 'acord126') {
+    console.log("ACORD 126 data detected, letting fillPdf handle it");
     return data;
   }
   
@@ -290,6 +305,94 @@ function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
       sic1: data.sic || "",
       naics1: data.naics || "",
       feinOrSocSec1: data.feinOrSocSec || data.insuredFein || ""
+    }
+  };
+}
+
+/**
+ * Map ACORD 126 form data to Anvil's expected format for PDF filling
+ * @param data Form data from the application
+ * @returns Data formatted for Anvil PDF filling for ACORD 126
+ */
+function mapAcord126DataToAnvilFormat(data: Record<string, any>): Record<string, any> {
+  // Create a structure that matches Anvil's expected format for ACORD 126
+  const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  
+  // Extract applicant name
+  let applicantName = data.applicantFirstNamedInsured || 
+                      data.namedInsured || 
+                      data.insuredCompanyName || 
+                      "";
+  
+  // Create the payload structure for ACORD 126
+  return {
+    // Template information
+    title: "Acord 126",
+    fontSize: 10,
+    textColor: "#333333",
+    
+    // Nest all form data under the "data" key
+    data: {
+      // Basic Information
+      agencyCustomerId: data.agencyCustomerId || "",
+      effectiveDate: data.effectiveDate || today,
+      agency: data.agency || "",
+      carrier: data.carrier || "",
+      naicCode: data.naicCode || "",
+      policyNumber: data.policyNumber || "",
+      applicantFirstNamedInsured: applicantName,
+      
+      // Coverage / Limits
+      coverageType: data.coverageType || "",
+      claimsOccurrence: data.claimsOccurrence || "",
+      generalAggregate: data.generalAggregate || "",
+      limitAppliesPer: Array.isArray(data.limitAppliesPer) ? data.limitAppliesPer.join(', ') : (data.limitAppliesPer || ""),
+      productsCompletedOperationsAggregate: data.productsCompletedOperationsAggregate || "",
+      personalAdvertisingInjury: data.personalAdvertisingInjury || "",
+      eachOccurrence: data.eachOccurrence || "",
+      damageToRentedPremises: data.damageToRentedPremises || "",
+      medicalExpense: data.medicalExpense || "",
+      employeeBenefits: data.employeeBenefits || "",
+      
+      // Deductibles
+      propertyDamage: data.propertyDamage || "",
+      bodilyInjury: data.bodilyInjury || "",
+      deductibleType: data.deductibleType || "",
+      
+      // Premiums
+      premiseOperations: data.premiseOperations || "",
+      products: data.products || "",
+      other: data.other || "",
+      total: data.total || "",
+      
+      // Additional Coverages
+      otherCoverages: data.otherCoverages || "",
+      umUimCoverage: data.umUimCoverage || "",
+      medicalPaymentsCoverage: data.medicalPaymentsCoverage || "",
+      
+      // Schedule of Hazards
+      classificationDescription: data.classificationDescription || "",
+      ratingPremiumBasis: Array.isArray(data.ratingPremiumBasis) ? data.ratingPremiumBasis.join(', ') : (data.ratingPremiumBasis || ""),
+      
+      // Claims Made
+      proposedRetroactiveDate: data.proposedRetroactiveDate || "",
+      entryDateUninterruptedClaimsMadeCoverage: data.entryDateUninterruptedClaimsMadeCoverage || "",
+      excludedUninsuredSelfInsured: data.excludedUninsuredSelfInsured || "",
+      tailCoveragePurchased: data.tailCoveragePurchased || "",
+      
+      // Employee Benefits Liability
+      deductiblePerClaim: data.deductiblePerClaim || "",
+      numberOfEmployees: data.numberOfEmployees || "",
+      employeesCoveredByBenefitsPlans: data.employeesCoveredByBenefitsPlans || "",
+      retroactiveDate: data.retroactiveDate || "",
+      
+      // Contractors
+      drawPlansDesigns: data.drawPlansDesigns || "",
+      operationsIncludeBlasting: data.operationsIncludeBlasting || "",
+      operationsIncludeExcavation: data.operationsIncludeExcavation || "",
+      subcontractorsCoveragesLessThanYours: data.subcontractorsCoveragesLessThanYours || "",
+      subcontractorsWithoutCertificate: data.subcontractorsWithoutCertificate || "",
+      leaseEquipmentToOthers: data.leaseEquipmentToOthers || ""
     }
   };
 }

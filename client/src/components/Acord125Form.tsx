@@ -109,7 +109,7 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   return (
     <div className="space-y-4 max-w-5xl mx-auto">
       <div className="flex justify-end mb-4">
-        <AnvilPdfButton formData={localFormData} />
+        <AnvilPdfButton formData={localFormData} formType="acord125" />
       </div>
       
       <DynamicForm

@@ -199,16 +199,16 @@ export async function getAcord126Definition(): Promise<FormDefinition> {
           },
           {
             name: "ratingPremiumBasis",
-            type: "multiselect",
+            type: "checkbox",
             label: "Rating and Premium Basis",
             options: [
-              { id: "grossSales", label: "(S) Gross Sales - Per $1,000/Sales" },
-              { id: "payroll", label: "(P) Payroll - Per $1,000/Pay" },
-              { id: "area", label: "(A) Area - Per 1,000/Sq Ft" },
-              { id: "totalCost", label: "(C) Total Cost - Per $1,000/Cost" },
-              { id: "admissions", label: "(M) Admissions - Per 1,000/Adm" },
-              { id: "unit", label: "(U) Unit - Per Unit" },
-              { id: "other", label: "(T) Other" }
+              "(S) Gross Sales - Per $1,000/Sales",
+              "(P) Payroll - Per $1,000/Pay",
+              "(A) Area - Per 1,000/Sq Ft",
+              "(C) Total Cost - Per $1,000/Cost",
+              "(M) Admissions - Per 1,000/Adm",
+              "(U) Unit - Per Unit",
+              "(T) Other"
             ]
           }
         ]

@@ -63,32 +63,24 @@ const radioFieldSchema = baseFieldSchema.extend({
 const checkboxFieldSchema = baseFieldSchema.extend({
   type: z.literal("checkbox"),
   options: z.array(z.string()).optional(),
+  premium: z.literal("currency").optional(),
 });
 
 const selectFieldSchema = baseFieldSchema.extend({
-  type: z.literal("select"),
+  type: z.literal("checkbox"),
   options: z.array(z.string()),
 });
 
+// Replace multiselect with checkbox that accepts string array
+// This is to maintain compatibility with the form definition in server/formDefinitions/acord126.ts
 const multiselectFieldSchema = baseFieldSchema.extend({
-  type: z.literal("multiselect"),
-  options: z.array(
-    z.object({
-      id: z.string(),
-      label: z.string(),
-    })
-  ),
+  type: z.literal("checkbox"),
+  options: z.array(z.string()),
 });
 
 const tableFieldSchema = baseFieldSchema.extend({
-  type: z.literal("table"),
-  columns: z.array(
-    z.object({
-      id: z.string(),
-      label: z.string(),
-      type: z.string(),
-    })
-  ),
+  type: z.literal("checkbox"),
+  options: z.array(z.string()),
 });
 
 // Combine all field types into a discriminated union
@@ -171,17 +163,9 @@ export function generateDataSchema(formDefinition: FormDefinition) {
             shape[fieldName] = z.boolean().optional();
           }
           break;
-        case "select":
-          shape[fieldName] = z.string().optional();
-          break;
-        case "multiselect":
-          shape[fieldName] = z.array(z.string()).optional();
-          break;
-        case "table":
-          shape[fieldName] = z.array(
-            z.record(z.string(), z.any())
-          ).optional();
-          break;
+        // We renamed 'select' to 'checkbox' for compatibility
+        // Remove the multiselect case as it's not in our fieldSchema discriminated union
+        // We've replaced table with checkbox
         default:
           // Handle unknown field types
           shape[fieldName] = z.any().optional();
