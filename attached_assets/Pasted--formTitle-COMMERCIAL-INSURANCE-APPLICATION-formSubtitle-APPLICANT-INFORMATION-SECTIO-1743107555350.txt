@@ -1,0 +1,263 @@
+{
+  "formTitle": "COMMERCIAL INSURANCE APPLICATION",
+  "formSubtitle": "APPLICANT INFORMATION SECTION",
+  "formNumber": "ACORD 125 (2013/09)",
+  "formDescription": "A standard form used in the insurance industry for commercial insurance applications. It collects comprehensive information about the applicant, their business operations, insurance needs, and risk profile.",
+  "sections": [
+    {
+      "name": "agencyInformation",
+      "title": "Agency Information",
+      "description": "Information about the insurance agency submitting the application",
+      "fields": [
+        {"name": "agency", "type": "text", "label": "Agency", "description": "Full name of the insurance agency submitting the application"},
+        {"name": "contactName", "type": "text", "label": "Contact Name", "description": "Name of the individual agent or contact person at the agency"},
+        {"name": "phone", "type": "phone", "label": "Phone (A/C, No, Ext)", "description": "Primary phone number for the agency contact including area code and extension if applicable"},
+        {"name": "fax", "type": "phone", "label": "Fax (A/C, No)", "description": "Fax number for the agency including area code"},
+        {"name": "email", "type": "email", "label": "E-mail Address", "description": "Email address for the agency contact person"},
+        {"name": "code", "type": "text", "label": "Code", "description": "Agency code assigned by the insurance carrier"},
+        {"name": "subcode", "type": "text", "label": "Subcode", "description": "Additional identifier code used by some carriers to further categorize the agency relationship"},
+        {"name": "agencyCustomerId", "type": "text", "label": "Agency Customer ID", "description": "Unique identifier assigned to the customer by the agency for internal tracking"}
+      ]
+    },
+    {
+      "name": "carrierInformation",
+      "title": "Carrier Information",
+      "description": "Information about the insurance carrier providing the coverage",
+      "fields": [
+        {"name": "carrier", "type": "text", "label": "Carrier", "description": "Name of the insurance company that will issue the policy"},
+        {"name": "naicCode", "type": "text", "label": "NAIC Code", "description": "National Association of Insurance Commissioners identification code for the insurance carrier"},
+        {"name": "companyPolicyOrProgramName", "type": "text", "label": "Company Policy or Program Name", "description": "Name of the specific insurance program or policy type being applied for"},
+        {"name": "programCode", "type": "text", "label": "Program Code", "description": "Carrier's identifier for the specific insurance program"},
+        {"name": "policyNumber", "type": "text", "label": "Policy Number", "description": "Unique identifier for the insurance policy, if already assigned"}
+      ]
+    },
+    {
+      "name": "underwriterInformation",
+      "title": "Underwriter Information",
+      "description": "Information about the underwriter responsible for evaluating the application",
+      "fields": [
+        {"name": "underwriter", "type": "text", "label": "Underwriter", "description": "Name of the individual underwriter reviewing the application"},
+        {"name": "underwriterOffice", "type": "text", "label": "Underwriter Office", "description": "Location or branch of the underwriting office handling the application"}
+      ]
+    },
+    {
+      "name": "transactionStatus",
+      "title": "Status of Transaction",
+      "description": "Information about the type and status of the insurance transaction",
+      "fields": [
+        {"name": "statusOfTransaction", "type": "radio", "label": "Status of Transaction", "options": ["Quote", "Issue Policy", "Renew", "Bound", "Change", "Cancel"], "description": "Current stage of the insurance transaction process"},
+        {"name": "boundDate", "type": "text", "label": "Bound (Give Date and/or Attach Copy)", "description": "Date when coverage was bound or attach evidence of binding"},
+        {"name": "date", "type": "date", "label": "Date", "description": "Date associated with the transaction status"},
+        {"name": "time", "type": "time", "label": "Time", "description": "Time associated with the transaction status"},
+        {"name": "timeAmPm", "type": "radio", "label": "", "options": ["AM", "PM"], "description": "Indicates whether the time is AM or PM"}
+      ]
+    },
+    {
+      "name": "sectionsAttached",
+      "title": "Sections Attached",
+      "description": "Indicates which insurance coverage sections are included in this application with associated premiums",
+      "fields": [
+        {"name": "accountsReceivableValuablePapers", "type": "checkbox", "label": "Accounts Receivable / Valuable Papers", "premium": "currency", "description": "Coverage for loss of accounts receivable records and valuable papers"},
+        {"name": "boilerMachinery", "type": "checkbox", "label": "Boiler & Machinery", "premium": "currency", "description": "Coverage for damage to boilers, machinery, and related equipment"},
+        {"name": "businessAuto", "type": "checkbox", "label": "Business Auto", "premium": "currency", "description": "Coverage for vehicles owned or used by the business"},
+        {"name": "businessOwners", "type": "checkbox", "label": "Business Owners", "premium": "currency", "description": "Package policy combining property and liability coverage for small to medium businesses"},
+        {"name": "commercialGeneralLiability", "type": "checkbox", "label": "Commercial General Liability", "premium": "currency", "description": "Coverage for third-party bodily injury and property damage claims"},
+        {"name": "crime", "type": "checkbox", "label": "Crime", "premium": "currency", "description": "Coverage for losses due to employee dishonesty, forgery, robbery, and other criminal acts"},
+        {"name": "dealers", "type": "checkbox", "label": "Dealers", "premium": "currency", "description": "Specialized coverage for auto, boat, equipment or other dealers"},
+        {"name": "electronicDataProc", "type": "checkbox", "label": "Electronic Data Proc", "premium": "currency", "description": "Coverage for electronic data processing equipment and data"},
+        {"name": "equipmentFloater", "type": "checkbox", "label": "Equipment Floater", "premium": "currency", "description": "Coverage for mobile or portable equipment regardless of location"},
+        {"name": "garageAndDealers", "type": "checkbox", "label": "Garage and Dealers", "premium": "currency", "description": "Specialized coverage for auto service operations and dealerships"},
+        {"name": "glassAndSign", "type": "checkbox", "label": "Glass and Sign", "premium": "currency", "description": "Coverage for damage to plate glass windows, doors, and signs"},
+        {"name": "installationBuildersRisk", "type": "checkbox", "label": "Installation / Builders Risk", "premium": "currency", "description": "Coverage for property during construction or installation projects"},
+        {"name": "openCargo", "type": "checkbox", "label": "Open Cargo", "premium": "currency", "description": "Coverage for goods in transit"},
+        {"name": "property", "type": "checkbox", "label": "Property", "premium": "currency", "description": "Coverage for physical assets and buildings owned by the business"},
+        {"name": "transportationMotorTruckCargo", "type": "checkbox", "label": "Transportation / Motor Truck Cargo", "premium": "currency", "description": "Coverage for goods being transported by truck"},
+        {"name": "truckersMotorCarrier", "type": "checkbox", "label": "Truckers / Motor Carrier", "premium": "currency", "description": "Specialized coverage for trucking operations"},
+        {"name": "umbrella", "type": "checkbox", "label": "Umbrella", "premium": "currency", "description": "Excess liability coverage that provides additional limits above primary policies"},
+        {"name": "yacht", "type": "checkbox", "label": "Yacht", "premium": "currency", "description": "Coverage for yacht or larger vessels"}
+      ]
+    },
+    {
+      "name": "attachments",
+      "title": "Attachments",
+      "description": "Additional forms and schedules attached to support the application",
+      "fields": [
+        {"name": "additionalInterest", "type": "checkbox", "label": "Additional Interest", "description": "Form listing additional parties with insurable interest in covered property"},
+        {"name": "additionalPremises", "type": "checkbox", "label": "Additional Premises", "description": "Form with information about additional business locations"},
+        {"name": "apartmentBuildingSupplement", "type": "checkbox", "label": "Apartment Building Supplement", "description": "Additional information for apartment building risks"},
+        {"name": "condoAssnBylaws", "type": "checkbox", "label": "Condo Assn Bylaws (for D&O Coverage only)", "description": "Condominium association documents needed for Directors & Officers coverage"},
+        {"name": "contractorsSupplement", "type": "checkbox", "label": "Contractors Supplement", "description": "Additional information specific to contracting operations"},
+        {"name": "coveragesSchedule", "type": "checkbox", "label": "Coverages Schedule", "description": "Detailed listing of coverages, limits, and premiums"},
+        {"name": "driverInformationSchedule", "type": "checkbox", "label": "Driver Information Schedule", "description": "List of drivers for auto coverage with license information"},
+        {"name": "internationalLiabilityExposureSupplement", "type": "checkbox", "label": "International Liability Exposure Supplement", "description": "Additional information about liability exposures outside the US"},
+        {"name": "internationalPropertyExposureSupplement", "type": "checkbox", "label": "International Property Exposure Supplement", "description": "Additional information about property exposures outside the US"},
+        {"name": "lossSummary", "type": "checkbox", "label": "Loss Summary", "description": "Detailed information about prior losses and claims"},
+        {"name": "premiumPaymentSupplement", "type": "checkbox", "label": "Premium Payment Supplement", "description": "Information about premium payment plans and options"},
+        {"name": "professionalLiabilitySupplement", "type": "checkbox", "label": "Professional Liability Supplement", "description": "Additional information needed for professional liability coverage"},
+        {"name": "restaurantTavernSupplement", "type": "checkbox", "label": "Restaurant / Tavern Supplement", "description": "Additional information specific to restaurant or bar operations"},
+        {"name": "statementScheduleOfValues", "type": "checkbox", "label": "Statement / Schedule of Values", "description": "Detailed list of insured property with values"},
+        {"name": "stateSupplement", "type": "checkbox", "label": "State Supplement (If applicable)", "description": "Additional information required by specific state regulations"},
+        {"name": "vacantBuildingSupplement", "type": "checkbox", "label": "Vacant Building Supplement", "description": "Additional information specific to vacant buildings"},
+        {"name": "vehicleSchedule", "type": "checkbox", "label": "Vehicle Schedule", "description": "Detailed list of vehicles to be insured with their information"}
+      ]
+    },
+    {
+      "name": "policyInformation",
+      "title": "Policy Information",
+      "description": "Details about the policy terms, dates, and payment information",
+      "fields": [
+        {"name": "proposedEffDate", "type": "date", "label": "Proposed Eff Date", "description": "Requested effective date for the coverage to begin"},
+        {"name": "proposedExpDate", "type": "date", "label": "Proposed Exp Date", "description": "Requested expiration date for the coverage to end"},
+        {"name": "billingPlan", "type": "radio", "label": "Billing Plan", "options": ["Direct", "Agency"], "description": "Indicates whether the carrier bills the insured directly or through the agency"},
+        {"name": "paymentPlan", "type": "text", "label": "Payment Plan", "description": "Schedule for premium payments (annual, quarterly, monthly, etc.)"},
+        {"name": "methodOfPayment", "type": "text", "label": "Method of Payment", "description": "How premiums will be paid (check, EFT, credit card, etc.)"},
+        {"name": "audit", "type": "checkbox", "label": "Audit", "description": "Indicates if the policy is subject to premium audit"},
+        {"name": "deposit", "type": "currency", "label": "Deposit", "description": "Initial premium deposit amount"},
+        {"name": "minimumPremium", "type": "currency", "label": "Minimum Premium", "description": "Minimum premium amount required for the policy regardless of exposure changes"},
+        {"name": "policyPremium", "type": "currency", "label": "Policy Premium", "description": "Total estimated premium for the policy term"}
+      ]
+    },
+    {
+      "name": "applicantInformation",
+      "title": "Applicant Information",
+      "description": "Detailed information about the business entity applying for insurance",
+      "fields": [
+        {"name": "namedInsured", "type": "text", "label": "Name (First Named Insured) AND Mailing Address (including ZIP+4)", "description": "Legal name of the primary insured entity and complete mailing address"},
+        {"name": "glCode", "type": "text", "label": "GL Code", "description": "General Liability classification code for the business operations"},
+        {"name": "sic", "type": "text", "label": "SIC", "description": "Standard Industrial Classification code for the business"},
+        {"name": "naics", "type": "text", "label": "NAICS", "description": "North American Industry Classification System code"},
+        {"name": "feinOrSocSec", "type": "text", "label": "FEIN or Soc Sec #", "description": "Federal Employer Identification Number or Social Security Number of the insured"},
+        {"name": "businessPhone", "type": "phone", "label": "Business Phone #", "description": "Primary business telephone number"},
+        {"name": "websiteAddress", "type": "url", "label": "Website Address", "description": "Business website URL"},
+        {"name": "businessType", "type": "radio", "label": "Business Type", "options": [
+          "Individual", "Corporation", "Partnership", "Joint Venture", "LLC", "Not For Profit Org", "Subchapter \"S\" Corporation", "Trust"
+        ], "description": "Legal structure of the business entity"},
+        {"name": "noOfMembersAndManagers", "type": "number", "label": "No. of Members and Managers", "conditionalOn": "businessType", "conditions": ["LLC"], "description": "For LLC entities, the number of members and managers"}
+      ]
+    },
+    {
+      "name": "contactInformation",
+      "title": "Contact Information",
+      "description": "Information about key contacts associated with the insured business",
+      "fields": [
+        {"name": "contactType", "type": "text", "label": "Contact Type", "description": "Role or position of the contact person (Owner, Manager, CFO, etc.)"},
+        {"name": "contactName", "type": "text", "label": "Contact Name", "description": "Full name of the contact person"},
+        {"name": "primaryPhoneNumber", "type": "phone", "label": "Primary Phone #", "description": "Main phone number for the contact person"},
+        {"name": "primaryPhoneType", "type": "radio", "label": "", "options": ["Home", "Bus", "Cell"], "description": "Type of phone number provided (Home, Business, or Cell)"},
+        {"name": "secondaryPhoneNumber", "type": "phone", "label": "Secondary Phone #", "description": "Alternative phone number for the contact person"},
+        {"name": "secondaryPhoneType", "type": "radio", "label": "", "options": ["Home", "Bus", "Cell"], "description": "Type of secondary phone number (Home, Business, or Cell)"},
+        {"name": "primaryEmailAddress", "type": "email", "label": "Primary E-mail Address", "description": "Main email address for the contact person"},
+        {"name": "secondaryEmailAddress", "type": "email", "label": "Secondary E-mail Address", "description": "Alternative email address for the contact person"}
+      ]
+    },
+    {
+      "name": "premisesInformation",
+      "title": "Premises Information",
+      "description": "Details about each location where the business operates",
+      "repeating": true,
+      "fields": [
+        {"name": "locNumber", "type": "number", "label": "Loc #", "description": "Sequential location number for multiple premises"},
+        {"name": "bldNumber", "type": "number", "label": "Bld #", "description": "Building number at the specified location"},
+        {"name": "street", "type": "text", "label": "Street", "description": "Street address of the premises"},
+        {"name": "city", "type": "text", "label": "City", "description": "City where the premises is located"},
+        {"name": "county", "type": "text", "label": "County", "description": "County where the premises is located"},
+        {"name": "state", "type": "text", "label": "State", "description": "State where the premises is located"},
+        {"name": "zip", "type": "text", "label": "ZIP", "description": "ZIP or postal code for the premises"},
+        {"name": "cityLimits", "type": "radio", "label": "City Limits", "options": ["Inside", "Outside"], "description": "Indicates if the premises is inside or outside city limits"},
+        {"name": "interest", "type": "radio", "label": "Interest", "options": ["Owner", "Tenant"], "description": "Indicates if the insured owns or leases the premises"},
+        {"name": "fullTimeEmployees", "type": "number", "label": "# Full Time Empl", "description": "Number of full-time employees at this location"},
+        {"name": "partTimeEmployees", "type": "number", "label": "# Part Time Empl", "description": "Number of part-time employees at this location"},
+        {"name": "annualRevenues", "type": "currency", "label": "Annual Revenues", "description": "Gross annual revenue generated at this location"},
+        {"name": "occupiedArea", "type": "number", "label": "Occupied Area", "unit": "SQ FT", "description": "Square footage of space occupied by the business at this location"},
+        {"name": "openToPublicArea", "type": "number", "label": "Open to Public Area", "unit": "SQ FT", "description": "Square footage of area accessible to the public"},
+        {"name": "totalBuildingArea", "type": "number", "label": "Total Building Area", "unit": "SQ FT", "description": "Total square footage of the building"},
+        {"name": "areaLeasedToOthers", "type": "radio", "label": "Any Area Leased to Others?", "options": ["Y", "N"], "description": "Indicates if any portion of the premises is sublet to others"},
+        {"name": "descriptionOfOperations", "type": "textarea", "label": "Description of Operations", "description": "Detailed explanation of business activities conducted at this location"}
+      ]
+    },
+    {
+      "name": "natureOfBusiness",
+      "title": "Nature of Business",
+      "description": "Comprehensive information about the business operations and activities",
+      "fields": [
+        {"name": "businessType", "type": "checkbox", "label": "Business Type", "options": [
+          "Apartments", "Condominiums", "Contractor", "Institutional", "Manufacturing", "Office", "Restaurant", "Retail", "Service", "Wholesale"
+        ], "description": "General category of business operations"},
+        {"name": "dateBusinessStarted", "type": "date", "label": "Date Business Started (MM/DD/YYYY)", "description": "Date when the business began operations"},
+        {"name": "descriptionOfPrimaryOperations", "type": "textarea", "label": "Description of Primary Operations", "description": "Detailed explanation of the main business activities"},
+        {"name": "retailStoresOrServiceOperationsPercentage", "type": "number", "label": "Retail Stores or Service Operations % of Total Sales", "description": "Percentage of overall business revenue coming from retail or service operations"},
+        {"name": "installationServiceOrRepairWork", "type": "number", "label": "Installation, Service or Repair Work", "unit": "%", "description": "Percentage of operations involving installation, service, or repair work"},
+        {"name": "offPremisesInstallationServiceOrRepairWork", "type": "number", "label": "Off Premises Installation, Service or Repair Work", "unit": "%", "description": "Percentage of operations involving installation, service, or repair work performed away from insured premises"},
+        {"name": "descriptionOfOperationsOfOtherNamedInsureds", "type": "textarea", "label": "Description of Operations of Other Named Insureds", "description": "Details about the business activities of additional named insureds"}
+      ]
+    },
+    {
+      "name": "additionalInterest",
+      "title": "Additional Interest",
+      "description": "Information about other parties with insurable interest in the covered property",
+      "repeating": true,
+      "fields": [
+        {"name": "interestType", "type": "checkbox", "label": "Interest", "options": [
+          "Additional Insured", "Loss Payee", "Mortgagee", "Owner", "Breach of Warranty", "Co-Owner", "Employee", "Registrant", "As Lessor", "Trustee", "Leaseback Owner", "Lienholder"
+        ], "description": "Type of interest the third party has in the insured property"},
+        {"name": "nameAndAddress", "type": "text", "label": "Name and Address", "description": "Full name and address of the additional interest party"},
+        {"name": "rank", "type": "text", "label": "Rank", "description": "Priority ranking if multiple interests exist on the same property"},
+        {"name": "evidence", "type": "checkbox", "label": "Evidence", "options": ["Certificate", "Policy", "Send Bill"], "description": "Type of documentation to be provided to the additional interest"},
+        {"name": "interestInItemNumber", "type": "text", "label": "Interest in Item Number", "description": "Reference to specific property item number in which the party has interest"},
+        {"name": "location", "type": "text", "label": "Location", "description": "Location of the property in which the additional interest exists"},
+        {"name": "building", "type": "text", "label": "Building", "description": "Building reference for the additional interest"},
+        {"name": "vehicle", "type": "text", "label": "Vehicle", "description": "Vehicle identification information if interest is in a vehicle"},
+        {"name": "boat", "type": "text", "label": "Boat", "description": "Boat identification information if interest is in a boat"},
+        {"name": "airport", "type": "text", "label": "Airport", "description": "Airport information if relevant to the interest"},
+        {"name": "aircraft", "type": "text", "label": "Aircraft", "description": "Aircraft identification information if interest is in an aircraft"},
+        {"name": "itemClass", "type": "text", "label": "Item Class", "description": "Classification of the item in which interest exists"},
+        {"name": "item", "type": "text", "label": "Item", "description": "Description of the specific item in which interest exists"},
+        {"name": "itemDescription", "type": "text", "label": "Item Description", "description": "Detailed description of the item in which interest exists"},
+        {"name": "referenceLoanNumber", "type": "text", "label": "Reference / Loan #", "description": "Loan or reference number associated with the interest"},
+        {"name": "interestEndDate", "type": "date", "label": "Interest End Date", "description": "Date when the additional interest expires"},
+        {"name": "lienAmount", "type": "currency", "label": "Lien Amount", "description": "Dollar amount of any lien on the property"},
+        {"name": "phone", "type": "phone", "label": "Phone (A/C, No, Ext)", "description": "Phone number for the additional interest contact"},
+        {"name": "fax", "type": "phone", "label": "Fax (A/C, No)", "description": "Fax number for the additional interest contact"},
+        {"name": "email", "type": "email", "label": "E-mail Address", "description": "Email address for the additional interest contact"},
+        {"name": "reasonForInterest", "type": "text", "label": "Reason for Interest", "description": "Explanation of why this party has an interest in the insured property"}
+      ]
+    },
+    {
+      "name": "generalInformation",
+      "title": "General Information",
+      "description": "Additional details about the business structure, operations, and risk factors",
+      "fields": [
+        {"name": "isApplicantSubsidiary", "type": "radio", "label": "Is the Applicant a Subsidiary of Another Entity?", "options": ["Y", "N"], "description": "Indicates if the applicant business is owned by a parent company"},
+        {"name": "parentCompanyName", "type": "text", "label": "Parent Company Name", "conditionalOn": "isApplicantSubsidiary", "conditions": ["Y"], "description": "Name of the parent company that owns the applicant"},
+        {"name": "parentRelationshipDescription", "type": "text", "label": "Relationship Description", "conditionalOn": "isApplicantSubsidiary", "conditions": ["Y"], "description": "Details about the relationship between the parent and applicant"},
+        {"name": "parentPercentOwned", "type": "number", "label": "% Owned", "conditionalOn": "isApplicantSubsidiary", "conditions": ["Y"], "description": "Percentage of the applicant owned by the parent company"},
+        
+        {"name": "hasSubsidiaries", "type": "radio", "label": "Does the Applicant Have Any Subsidiaries?", "options": ["Y", "N"], "description": "Indicates if the applicant owns other companies"},
+        {"name": "subsidiaryCompanyName", "type": "text", "label": "Subsidiary Company Name", "conditionalOn": "hasSubsidiaries", "conditions": ["Y"], "description": "Name of the company owned by the applicant"},
+        {"name": "subsidiaryRelationshipDescription", "type": "text", "label": "Relationship Description", "conditionalOn": "hasSubsidiaries", "conditions": ["Y"], "description": "Details about the relationship between the applicant and subsidiary"},
+        {"name": "subsidiaryPercentOwned", "type": "number", "label": "% Owned", "conditionalOn": "hasSubsidiaries", "conditions": ["Y"], "description": "Percentage of the subsidiary owned by the applicant"},
+        
+        {"name": "formalSafetyProgram", "type": "radio", "label": "Is a Formal Safety Program in Operation?", "options": ["Y", "N"], "description": "Indicates if the business has a documented safety program"},
+        {"name": "safetyProgramType", "type": "checkbox", "label": "", "options": ["Safety Manual", "Safety Position", "Monthly Meetings", "OSHA"], "conditionalOn": "formalSafetyProgram", "conditions": ["Y"], "description": "Components of the safety program implemented by the business"},
+        
+        {"name": "exposureToFlammablesExplosivesChemicals", "type": "radio", "label": "Any Exposure to Flammables, Explosives, Chemicals?", "options": ["Y", "N"], "description": "Indicates if operations involve hazardous materials"},
+        
+        {"name": "otherInsuranceWithThisCompany", "type": "radio", "label": "Any Other Insurance with This Company? (List policy numbers)", "options": ["Y", "N"], "description": "Indicates if the applicant has other policies with the same carrier"},
+        {"name": "otherInsuranceLineOfBusiness1", "type": "text", "label": "Line of Business", "conditionalOn": "otherInsuranceWithThisCompany", "conditions": ["Y"], "description": "Type of other insurance coverage with this carrier"},
+        {"name": "otherInsurancePolicyNumber1", "type": "text", "label": "Policy Number", "conditionalOn": "otherInsuranceWithThisCompany", "conditions": ["Y"], "description": "Policy number for other insurance with this carrier"},
+        {"name": "otherInsuranceLineOfBusiness2", "type": "text", "label": "Line of Business", "conditionalOn": "otherInsuranceWithThisCompany", "conditions": ["Y"], "description": "Type of additional insurance coverage with this carrier"},
+        {"name": "otherInsurancePolicyNumber2", "type": "text", "label": "Policy Number", "conditionalOn": "otherInsuranceWithThisCompany", "conditions": ["Y"], "description": "Policy number for additional insurance with this carrier"},
+        
+        {"name": "policyCanceledOrNonRenewed", "type": "radio", "label": "Any Policy or Coverage Declined, Cancelled or Non-Renewed During the Prior Three (3) Years for any Premises or Operations?", "options": ["Y", "N"], "description": "Indicates if the applicant has had insurance coverage terminated in the past three years"},
+        {"name": "reasonForCancellation", "type": "checkbox", "label": "", "options": ["Non-Payment", "Non-Renewal", "Agent No Longer Represents Carrier", "Underwriting", "Condition Corrected"], "conditionalOn": "policyCanceledOrNonRenewed", "conditions": ["Y"], "description": "Reason why previous coverage was terminated"},
+        {"name": "conditionCorrectedDescription", "type": "text", "label": "Condition Corrected (Describe)", "conditionalOn": "reasonForCancellation", "conditions": ["Condition Corrected"], "description": "Details about how the previous underwriting concern was resolved"},
+        
+        {"name": "pastLossesRelatedToAbuseOrDiscrimination", "type": "radio", "label": "Any Past Losses or Claims Relating to Sexual Abuse or Molestation Allegations, Discrimination or Negligent Hiring?", "options": ["Y", "N"], "description": "Indicates if the applicant has had specialized liability claims"},
+        
+        {"name": "arsonConviction", "type": "radio", "label": "During the Last Five Years (Ten in RI), Has Any Applicant Been Indicted for or Convicted of Any Degree of the Crime of Fraud, Bribery, Arson or Any Other Arson-Related Crime in Connection with This or Any Other Property?", "options": ["Y", "N"], "description": "Required disclosure for arson or fraud related convictions"},
+        
+        {"name": "uncorrectedFireSafetyViolations", "type": "radio", "label": "Any Uncorrected Fire and/or Safety Code Violations?", "options": ["Y", "N"], "description": "Indicates if there are outstanding safety violations at the premises"},
+        {"name": "violationOccurrenceDate", "type": "date", "label": "Occurrence Date", "conditionalOn": "uncorrectedFireSafetyViolations", "conditions": ["Y"], "description": "Date when the violation was identified or cited"},
+        {"name": "violationExplanation", "type": "textarea", "label": "Explanation", "conditionalOn": "uncorrectedFireSafetyViolations", "conditions": ["Y"], "description": "Details about the nature of the fire or safety code violation"},
+        {"name": "violationResolution", "type": "textarea", "label": "Resolution", "conditionalOn": "uncorrectedFireSafetyViolations", "conditions": ["Y"], "description": "Steps being taken to address the violation"},
+        {"name": "violationResolutionDate", "type": "date", "label": "Resolution Date", "conditionalOn": "uncorrectedFireSafetyViolations", "conditions": ["Y"], "description": "Expected or actual date when
