@@ -49,37 +49,29 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
   }
   
   try {
-    // Path to the PDF template
-    const pdfTemplateFile = path.join(currentDirPath, '../../client/public/templates/acord125.pdf');
+    // We don't need to read the template file anymore since we're using a template ID from Anvil
     
-    // Read the PDF template as a buffer
-    const pdfTemplate = fs.readFileSync(pdfTemplateFile);
-    
-    // Cast file to base64
-    const pdfTemplateBase64 = pdfTemplate.toString('base64');
-    
-    // Let's try a simpler approach with Anvil's PDF filling
-    // Instead of using generatePDF, we'll use fillPDF with a direct file approach
+    // Now we'll use fillPDF with an actual template ID
     const anvilData = mapDataToAnvilFormat(data);
     
     // Log the mapped data for debugging
     console.log('Anvil data for PDF filling:', anvilData);
     
-    // Create a simplified payload for Anvil
+    // When using a template ID, we only need to provide the data
+    // The template is already stored on Anvil's servers
     const payload = {
-      data: anvilData,
-      file: pdfTemplateBase64
+      data: anvilData
     };
     
     let pdfResponse;
     
     try {
-      // Use a test/sample EID (we're not using an actual template from Anvil)
-      const sampleEid = 'sample-eid';
-      console.log('Attempting to fill PDF with Anvil using EID:', sampleEid);
+      // Use the provided template ID from Anvil
+      const templateId = 'gfCWlUgpFz7Bvpb84Obw';
+      console.log('Attempting to fill PDF with Anvil using template ID:', templateId);
       
       // Make the fillPDF request with the payload
-      const response = await anvilClient!.fillPDF(sampleEid, payload);
+      const response = await anvilClient!.fillPDF(templateId, payload);
       pdfResponse = response;
       
       console.log('Anvil API response status:', response ? 'Success' : 'Empty response');
@@ -152,33 +144,33 @@ function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
   // Create a mapping of our form fields to Anvil fields
   // This will depend on the field names in the PDF form
   
-  // For ACORD 125 form, convert our field names to match the PDF form field names
-  // This is a simplified mapping; you would need to expand this based on your actual PDF form fields
+  // For ACORD 125 form, convert our field names to match Anvil's expected field names
+  // We're using lowercase field names as per Anvil documentation
   const mapping: Record<string, string> = {
     // Applicant Information
-    'namedInsured': 'NAMED_INSURED',
-    'dba': 'DBA',
-    'mailingAddress': 'MAILING_ADDRESS',
-    'mailingCity': 'MAILING_CITY',
-    'mailingState': 'MAILING_STATE',
-    'mailingZipCode': 'MAILING_ZIP',
-    'email': 'EMAIL',
-    'businessPhone': 'PHONE',
-    'websiteAddress': 'WEBSITE',
-    'feinOrSocSec': 'FEIN',
+    'namedInsured': 'named_insured',
+    'dba': 'dba',
+    'mailingAddress': 'mailing_address',
+    'mailingCity': 'mailing_city',
+    'mailingState': 'mailing_state',
+    'mailingZipCode': 'mailing_zip',
+    'email': 'email',
+    'businessPhone': 'phone',
+    'websiteAddress': 'website',
+    'feinOrSocSec': 'fein',
     
     // Business Information
-    'natureOfBusiness': 'NATURE_OF_BUSINESS',
-    'descriptionOfPrimaryOperations': 'DESCRIPTION_OF_OPERATIONS',
-    'businessType': 'BUSINESS_TYPE',
-    'naics': 'NAICS',
-    'sic': 'SIC',
+    'natureOfBusiness': 'nature_of_business',
+    'descriptionOfPrimaryOperations': 'description_operations',
+    'businessType': 'business_type',
+    'naics': 'naics_code',
+    'sic': 'sic_code',
 
     // Agency Information
-    'agency': 'AGENCY_NAME',
-    'contactName': 'AGENCY_CONTACT',
-    'phone': 'AGENCY_PHONE',
-    'agencyCustomerID': 'AGENCY_CUSTOMER_ID',
+    'agency': 'agency_name',
+    'contactName': 'agency_contact',
+    'phone': 'agency_phone',
+    'agencyCustomerID': 'agency_customer_id',
     
     // Additional fields can be added as needed
   };
