@@ -66,6 +66,7 @@ export async function mapCompanyDataToForm(
     
     // Process data in chunks to avoid token limits
     console.log('Processing company data in chunks to avoid token limits');
+    console.log('Important company data chunk:', JSON.stringify(importantCompanyData, null, 2));
     
     // First, process the important data to get initial mappings
     const initialMappings = await processCompanyDataChunk(
@@ -73,6 +74,8 @@ export async function mapCompanyDataToForm(
       formFields,
       'Provide the best mapping from this data, focusing only on the most important fields.'
     );
+    
+    console.log('Initial mappings result:', JSON.stringify(initialMappings, null, 2));
     
     // Then, process any additional chunks if needed by focusing on specific form sections
     let finalMappings = { ...initialMappings };
@@ -92,11 +95,15 @@ export async function mapCompanyDataToForm(
             country: company.company_country
           };
           
+          console.log('Address data chunk:', JSON.stringify(addressData, null, 2));
+          
           const addressMappings = await processCompanyDataChunk(
             addressData,
             formFields,
             'Map this address information to form fields like mailingAddress, locationAddress, etc.'
           );
+          
+          console.log('Address mappings result:', JSON.stringify(addressMappings, null, 2));
           
           finalMappings = { ...finalMappings, ...addressMappings };
         }
@@ -109,11 +116,15 @@ export async function mapCompanyDataToForm(
             company_description: company.company_description
           };
           
+          console.log('Business type data chunk:', JSON.stringify(businessTypeData, null, 2));
+          
           const businessTypeMappings = await processCompanyDataChunk(
             businessTypeData,
             formFields,
             'Map this business entity information to businessType field (like corporation, llc, etc.)'
           );
+          
+          console.log('Business type mappings result:', JSON.stringify(businessTypeMappings, null, 2));
           
           finalMappings = { ...finalMappings, ...businessTypeMappings };
         }
@@ -124,6 +135,7 @@ export async function mapCompanyDataToForm(
     }
     
     console.log('AI successfully mapped company data to form fields');
+    console.log('Final mappings result:', JSON.stringify(finalMappings, null, 2));
     return finalMappings;
   } catch (error) {
     console.error('Error processing company data with OpenAI:', error);
@@ -199,6 +211,8 @@ async function processCompanyDataChunk(
     
     // Extract the response text
     const aiResponseText = response.choices[0]?.message?.content || '';
+    
+    console.log('OpenAI raw response text:', aiResponseText);
     
     // Parse the JSON response
     const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/);
