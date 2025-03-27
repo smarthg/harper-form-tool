@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { processCommand } from "@/lib/nlpProcessor";
-import { Mic } from "lucide-react";
+import { Mic, MicOff, Settings, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
+import { transcribeAudio, processCommandWithAI, isOpenAIInitialized, initializeOpenAI } from "@/lib/openaiService";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface VoiceInterfaceProps {
   isListening: boolean;
@@ -20,78 +24,145 @@ const VoiceInterface = ({
   lastCommand,
 }: VoiceInterfaceProps) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [apiKey, setApiKey] = useState<string>("");
+  const [apiKeySet, setApiKeySet] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
+  // Add styles for the loader and animation
   useEffect(() => {
-    // Initialize Web Speech API
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+    const styles = document.createElement('style');
+    styles.innerHTML = `
+      @keyframes pulse-ring {
+        0% {
+          transform: scale(0.9);
+          opacity: 0.7;
+        }
+        50% {
+          transform: scale(1);
+          opacity: 0.3;
+        }
+        100% {
+          transform: scale(0.9);
+          opacity: 0.7;
+        }
+      }
       
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+      .loader {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s linear infinite;
+      }
       
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setTranscript(transcript);
-        
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(styles);
+    
+    // Clean up on unmount
+    return () => {
+      document.head.removeChild(styles);
+    };
+  }, []);
+
+  // Check if the API key is available
+  useEffect(() => {
+    // Check if the API key is available from environment or localStorage
+    const storedApiKey = localStorage.getItem("openai_api_key");
+    
+    if (storedApiKey) {
+      // If key is in localStorage, initialize with it
+      setApiKey(storedApiKey);
+      setApiKeySet(true);
+      initializeOpenAI(storedApiKey);
+    } else if (isOpenAIInitialized()) {
+      // If OpenAI is already initialized with an environment key
+      setApiKeySet(true);
+    }
+  }, []);
+
+  const saveApiKey = () => {
+    if (apiKey) {
+      localStorage.setItem("openai_api_key", apiKey);
+      initializeOpenAI(apiKey);
+      setApiKeySet(true);
+      setIsDialogOpen(false);
+    }
+  };
+
+  const startListening = async () => {
+    if (!apiKeySet) {
+      setIsDialogOpen(true);
+      return;
+    }
+
+    try {
+      setIsListening(true);
+      setErrorMsg(null);
+      setTranscript("");
+      audioChunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        setIsProcessing(true);
         try {
-          const result = processCommand(transcript);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Transcribe audio with OpenAI
+          const text = await transcribeAudio(audioBlob);
+          setTranscript(text);
+
+          // Process command with OpenAI
+          const result = await processCommandWithAI(text);
+          
           if (result) {
-            onCommand(result.field, result.value, transcript);
+            onCommand(result.field, result.value, text);
           } else {
             setErrorMsg("Couldn't understand that command. Please try again.");
           }
-        } catch (error) {
-          console.error("Error processing command:", error);
-          setErrorMsg("Error processing command. Please try again.");
+        } catch (error: any) {
+          console.error("Error processing speech:", error);
+          setErrorMsg(`Error: ${error.message || "Something went wrong"}`);
+        } finally {
+          setIsProcessing(false);
+          setIsListening(false);
+          
+          // Stop all audio tracks
+          stream.getTracks().forEach(track => track.stop());
         }
-        
-        stopListening();
       };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech recognition error", event.error);
-        setErrorMsg(`Speech recognition error: ${event.error}`);
-        stopListening();
-      };
-      
-      recognitionRef.current.onend = () => {
-        stopListening();
-      };
-    } else {
-      setErrorMsg("Speech recognition is not supported in this browser.");
-    }
-    
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, [setTranscript, onCommand]);
-  
-  const startListening = () => {
-    try {
-      if (recognitionRef.current) {
-        setIsListening(true);
-        setErrorMsg(null);
-        setTranscript("");
-        recognitionRef.current.start();
-      }
-    } catch (error) {
-      console.error("Error starting speech recognition:", error);
-      setErrorMsg("Error starting speech recognition.");
+
+      mediaRecorderRef.current.start();
+    } catch (error: any) {
+      console.error("Error starting audio recording:", error);
+      setErrorMsg(`Error: ${error.message || "Could not access microphone"}`);
       setIsListening(false);
     }
   };
   
   const stopListening = () => {
     try {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
       }
-    } finally {
+    } catch (error) {
+      console.error("Error stopping recording:", error);
       setIsListening(false);
     }
   };
@@ -106,21 +177,44 @@ const VoiceInterface = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-medium text-neutral-500 mb-4">Voice Commands</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-medium text-neutral-500">Voice Commands</h2>
+        {!import.meta.env.VITE_OPENAI_API_KEY && (
+          <button
+            onClick={() => setIsDialogOpen(true)}
+            className="text-neutral-400 hover:text-primary"
+            title="API Settings"
+          >
+            <Settings size={18} />
+          </button>
+        )}
+      </div>
       
       <div className="mb-6">
         <button 
           onClick={toggleListening}
+          disabled={isProcessing || !apiKeySet}
           className={`relative flex items-center justify-center w-16 h-16 mx-auto mb-3 rounded-full text-white focus:outline-none hover:bg-primary/90 transition-colors ${
             isListening 
               ? "bg-primary mic-listening" 
-              : "bg-primary"
+              : isProcessing
+                ? "bg-neutral-300"
+                : !apiKeySet
+                  ? "bg-neutral-300"
+                  : "bg-primary"
           }`}
           style={{
             boxShadow: isListening ? '0 0 0 8px rgba(66, 133, 244, 0.2)' : 'none'
           }}
         >
-          <Mic className="w-6 h-6" />
+          {isListening ? (
+            <Mic className="w-6 h-6" />
+          ) : isProcessing ? (
+            <span className="loader"></span>
+          ) : (
+            <Mic className="w-6 h-6" />
+          )}
+          
           {isListening && (
             <span 
               className="absolute inset-0 rounded-full animate-ping" 
@@ -132,8 +226,22 @@ const VoiceInterface = ({
           )}
         </button>
         
-        <p className={`text-center text-sm font-medium ${isListening ? 'text-primary' : 'text-neutral-400'}`}>
-          {isListening ? 'Listening...' : 'Click to start speaking'}
+        <p className={`text-center text-sm font-medium ${
+          isListening 
+            ? 'text-primary' 
+            : isProcessing
+              ? 'text-neutral-400'
+              : !apiKeySet
+                ? 'text-neutral-400'
+                : 'text-neutral-400'
+        }`}>
+          {isListening 
+            ? 'Listening...' 
+            : isProcessing
+              ? 'Processing...'
+              : !apiKeySet
+                ? 'Set API key first'
+                : 'Click to start speaking'}
         </p>
       </div>
       
@@ -141,19 +249,19 @@ const VoiceInterface = ({
         <h3 className="text-sm font-medium text-neutral-400 mb-2">Try saying:</h3>
         <ul className="text-sm text-neutral-400 space-y-2">
           <li className="flex items-start">
-            <span className="material-icons text-primary text-sm mr-2">arrow_right</span>
+            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
             "Change the deductible to $2,000"
           </li>
           <li className="flex items-start">
-            <span className="material-icons text-primary text-sm mr-2">arrow_right</span>
+            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
             "Update my email to name@example.com"
           </li>
           <li className="flex items-start">
-            <span className="material-icons text-primary text-sm mr-2">arrow_right</span>
+            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
             "Set the coverage amount to $200,000"
           </li>
           <li className="flex items-start">
-            <span className="material-icons text-primary text-sm mr-2">arrow_right</span>
+            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
             "Change the policy type to Home Insurance"
           </li>
         </ul>
@@ -170,7 +278,7 @@ const VoiceInterface = ({
         
         {(lastCommand || errorMsg) && (
           <div 
-            className={`rounded-lg p-3 mb-2 text-sm font-medium ${
+            className={`rounded-lg p-3 mb-2 text-sm font-medium flex items-start ${
               errorMsg 
                 ? "bg-destructive/10 text-destructive" 
                 : lastCommand?.type === "success" 
@@ -178,25 +286,50 @@ const VoiceInterface = ({
                   : "bg-destructive/10 text-destructive"
             }`}
           >
-            <span className={`material-icons mr-1 text-sm ${
-              errorMsg || lastCommand?.type === "error" ? "text-destructive" : "text-green-800"
-            }`}>
-              {errorMsg || lastCommand?.type === "error" ? "error" : "check_circle"}
-            </span>
-            {errorMsg || lastCommand?.message}
+            {errorMsg || lastCommand?.type === "error" ? (
+              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            ) : (
+              <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            )}
+            <span>{errorMsg || lastCommand?.message}</span>
           </div>
         )}
       </div>
+      
+      {/* OpenAI API Key Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>OpenAI API Key</DialogTitle>
+            <DialogDescription>
+              Enter your OpenAI API key to enable speech-to-text and command processing.
+              Your key is stored locally and never sent to our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="apiKey">API Key</Label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="sk-..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <p className="text-xs text-neutral-400">
+                Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary">OpenAI</a>
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={saveApiKey} disabled={!apiKey.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
-// Add Web Speech API typings
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-}
 
 export default VoiceInterface;
