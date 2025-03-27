@@ -57,17 +57,131 @@ export async function mapCompanyDataToForm(
       });
     });
     
-    // Create a prompt for the AI to map company data to form fields
-    const prompt = `
-    I have company data and need to map it to an ACORD 125 (Commercial Insurance Application) form.
+    // Extract the most important company information first to reduce token size
+    // Get the company object from the response if needed
+    const company = companyData.company?.json?.company || companyData;
     
-    Here's the company data:
-    ${JSON.stringify(companyData, null, 2)}
+    // Create a focused dataset with only the most relevant company properties
+    const importantCompanyData = extractImportantCompanyData(company);
+    
+    // Process data in chunks to avoid token limits
+    console.log('Processing company data in chunks to avoid token limits');
+    
+    // First, process the important data to get initial mappings
+    const initialMappings = await processCompanyDataChunk(
+      importantCompanyData, 
+      formFields,
+      'Provide the best mapping from this data, focusing only on the most important fields.'
+    );
+    
+    // Then, process any additional chunks if needed by focusing on specific form sections
+    let finalMappings = { ...initialMappings };
+    
+    // Try to enhance the mappings with more specific sections if initial mapping is too small
+    if (Object.keys(initialMappings).length < 5) {
+      // Get additional mappings for specific form sections
+      try {
+        // Process address information 
+        if (company.company_street_address_1 || company.company_city || company.company_state) {
+          const addressData = {
+            street_address_1: company.company_street_address_1,
+            street_address_2: company.company_street_address_2,
+            city: company.company_city,
+            state: company.company_state,
+            postal_code: company.company_postal_code,
+            country: company.company_country
+          };
+          
+          const addressMappings = await processCompanyDataChunk(
+            addressData,
+            formFields,
+            'Map this address information to form fields like mailingAddress, locationAddress, etc.'
+          );
+          
+          finalMappings = { ...finalMappings, ...addressMappings };
+        }
+        
+        // Process business type information
+        if (company.company_legal_entity_type || company.company_type) {
+          const businessTypeData = {
+            legal_entity_type: company.company_legal_entity_type,
+            company_type: company.company_type,
+            company_description: company.company_description
+          };
+          
+          const businessTypeMappings = await processCompanyDataChunk(
+            businessTypeData,
+            formFields,
+            'Map this business entity information to businessType field (like corporation, llc, etc.)'
+          );
+          
+          finalMappings = { ...finalMappings, ...businessTypeMappings };
+        }
+      } catch (chunkError) {
+        console.error('Error processing additional data chunks:', chunkError);
+        // Continue with what we already have if chunk processing fails
+      }
+    }
+    
+    console.log('AI successfully mapped company data to form fields');
+    return finalMappings;
+  } catch (error) {
+    console.error('Error processing company data with OpenAI:', error);
+    // Fall back to basic mapping if AI processing fails
+    return basicCompanyDataMapping(companyData);
+  }
+}
+
+/**
+ * Extract the most important company data to reduce token size
+ */
+function extractImportantCompanyData(company: any): Record<string, any> {
+  // Create a focused subset of the most important company properties
+  return {
+    company_name: company.company_name,
+    company_primary_phone: company.company_primary_phone,
+    company_primary_email: company.company_primary_email,
+    company_description: company.company_description,
+    company_naics_code: company.company_naics_code,
+    company_sic_code: company.company_sic_code,
+    company_type: company.company_type || company.company_legal_entity_type,
+    company_website: company.company_website,
+    company_year_founded: company.company_year_founded,
+    company_ein: company.company_ein,
+    address: `${company.company_street_address_1 || ''} ${company.company_street_address_2 || ''}, ${company.company_city || ''}, ${company.company_state || ''} ${company.company_postal_code || ''}`.trim(),
+    annual_revenue: company.company_annual_revenue,
+    employees: company.company_employee_count,
+    industry: company.company_industry,
+    sub_industry: company.company_sub_industry
+  };
+}
+
+/**
+ * Process a chunk of company data with OpenAI for form field mapping
+ */
+async function processCompanyDataChunk(
+  dataChunk: Record<string, any>,
+  formFields: Record<string, { type: string, label: string }>,
+  instructions: string
+): Promise<Record<string, any>> {
+  if (!openai) {
+    return {};
+  }
+  
+  try {
+    // Create a focused prompt for this data chunk
+    const prompt = `
+    I need to map this company data to an ACORD 125 (Commercial Insurance Application) form.
+    
+    Here's the company data chunk:
+    ${JSON.stringify(dataChunk, null, 2)}
     
     Here are the form fields I need to fill:
     ${JSON.stringify(formFields, null, 2)}
     
-    Please map the company data to the appropriate form fields. Return ONLY a JSON object with form field names as keys and extracted values from the company data as values. 
+    ${instructions}
+    
+    Return ONLY a JSON object with form field names as keys and extracted values from the company data as values.
     If you can't find a match for a field, omit that field completely from the response.
     For example: { "namedInsured": "ACME Corporation", "businessPhone": "555-123-4567" }
     `;
@@ -80,32 +194,29 @@ export async function mapCompanyDataToForm(
         { role: 'user', content: prompt }
       ],
       temperature: 0.1, // Low temperature for more deterministic results
-      max_tokens: 1500
+      max_tokens: 1000
     });
     
     // Extract the response text
     const aiResponseText = response.choices[0]?.message?.content || '';
     
     // Parse the JSON response
-    // We need to extract just the JSON part from the response
     const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('Could not extract JSON from AI response:', aiResponseText);
-      return basicCompanyDataMapping(companyData);
+      console.error('Could not extract JSON from AI chunk response:', aiResponseText);
+      return {};
     }
     
     try {
       const mappedData = JSON.parse(jsonMatch[0]);
-      console.log('AI successfully mapped company data to form fields');
       return mappedData;
     } catch (parseError) {
-      console.error('Error parsing AI response JSON:', parseError);
-      return basicCompanyDataMapping(companyData);
+      console.error('Error parsing AI chunk response JSON:', parseError);
+      return {};
     }
   } catch (error) {
-    console.error('Error processing company data with OpenAI:', error);
-    // Fall back to basic mapping if AI processing fails
-    return basicCompanyDataMapping(companyData);
+    console.error('Error processing company data chunk with OpenAI:', error);
+    return {};
   }
 }
 
