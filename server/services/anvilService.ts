@@ -8,8 +8,8 @@ import dotenv from 'dotenv';
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirPath = path.dirname(currentFilePath);
 
-// Forward declaration for mapDataToAnvilFormat
-function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any>;
+// Define the type for the mapDataToAnvilFormat function
+type DataMapper = (data: Record<string, any>) => Record<string, any>;
 
 // Load environment variables
 dotenv.config();
@@ -58,26 +58,59 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
     // Cast file to base64
     const pdfTemplateBase64 = pdfTemplate.toString('base64');
     
-    // Prepare payload for the Anvil API
-    // For direct PDF filling (not using a template from Anvil), we need to provide the PDF file
+    // Let's try a simpler approach with Anvil's PDF filling
+    // Instead of using generatePDF, we'll use fillPDF with a direct file approach
+    const anvilData = mapDataToAnvilFormat(data);
+    
+    // Log the mapped data for debugging
+    console.log('Anvil data for PDF filling:', anvilData);
+    
+    // Create a simplified payload for Anvil
     const payload = {
-      title: 'ACORD 125 Commercial Insurance Application',
-      data: mapDataToAnvilFormat(data),  // Convert data to Anvil's expected format
-      file: pdfTemplateBase64,            // The PDF file encoded as base64
-      castEid: 'cast-eid-test'            // We use any string as a castEid when not using a template
+      data: anvilData,
+      file: pdfTemplateBase64
     };
     
-    // Make the fill PDF request using the Anvil client
-    // For direct PDF filling without a template, we use generatePDF method
-    const response = await anvilClient!.generatePDF(payload);
+    let pdfResponse;
     
-    // The response from Anvil API is an object with data property containing PDF as base64 string
-    if (!response || !response.data) {
-      throw new Error('Invalid response from Anvil API');
+    try {
+      // Use a test/sample EID (we're not using an actual template from Anvil)
+      const sampleEid = 'sample-eid';
+      console.log('Attempting to fill PDF with Anvil using EID:', sampleEid);
+      
+      // Make the fillPDF request with the payload
+      const response = await anvilClient!.fillPDF(sampleEid, payload);
+      pdfResponse = response;
+      
+      console.log('Anvil API response status:', response ? 'Success' : 'Empty response');
+      console.log('Anvil API response type:', typeof response);
+      
+      // Check the response
+      if (!response) {
+        console.error('Anvil API returned empty response');
+        throw new Error('Empty response from Anvil API');
+      }
+      
+      // For better debugging, let's log all response keys but not their values
+      console.log('Anvil response keys:', Object.keys(response));
+      
+      // The response from Anvil API is an object with statusCode and data properties
+      if (response.statusCode && response.statusCode !== 200) {
+        console.error(`Anvil API error: Status ${response.statusCode}`);
+        throw new Error(`Anvil API returned error status: ${response.statusCode}`);
+      }
+      
+      if (!response.data) {
+        console.error('Anvil API response missing data property');
+        throw new Error('Invalid response format from Anvil API');
+      }
+    } catch (anvErr) {
+      console.error('Anvil API error details:', anvErr);
+      throw anvErr;
     }
     
     // Return the filled PDF as a buffer
-    return Buffer.from(response.data, 'base64');
+    return Buffer.from(pdfResponse.data, 'base64');
   } catch (error) {
     console.error('Error filling PDF with Anvil:', error);
     throw error;
