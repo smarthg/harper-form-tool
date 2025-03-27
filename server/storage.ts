@@ -48,6 +48,7 @@ export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompany(id: number): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
+  getCompanyDetailedInfo(companyId: number): Promise<any>;
   
   // Form data methods
   initializeFormData(): Promise<FormDataType>;
@@ -190,6 +191,35 @@ export class MemStorage implements IStorage {
     const newCompany: Company = { ...company, id };
     this.companies.set(id, newCompany);
     return newCompany;
+  }
+
+  /**
+   * Fetch detailed company information from external API
+   * @param companyId The ID of the company to fetch details for
+   * @returns Detailed company information object
+   */
+  async getCompanyDetailedInfo(companyId: number): Promise<any> {
+    try {
+      console.log(`Fetching detailed info for company ID: ${companyId}`);
+      const response = await fetch('https://tatch.retool.com/url/company-memory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Workflow-Api-Key': 'retool_wk_399d5bbb7fa84a4887466b87856d51a8'
+        },
+        body: JSON.stringify({ company_id: companyId })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error fetching detailed info for company ID ${companyId}:`, error);
+      throw error;
+    }
   }
 
   async fetchCompaniesFromApi(): Promise<Company[]> {

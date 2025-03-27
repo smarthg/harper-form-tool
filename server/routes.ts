@@ -75,6 +75,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get detailed company information
+  app.get("/api/companies/:id/details", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+      
+      // First check if the company exists in our database
+      const company = await storage.getCompany(id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
+      // Fetch detailed information from the external API
+      const companyDetails = await storage.getCompanyDetailedInfo(id);
+      
+      res.json(companyDetails);
+    } catch (error) {
+      console.error(`Error fetching detailed info for company ID ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to fetch company details" });
+    }
+  });
+  
   // Refresh companies from external API
   app.post("/api/companies/refresh", requireAuth, async (req, res) => {
     try {

@@ -6,6 +6,7 @@ import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
 import FormUploadModal from "@/components/FormUploadModal";
 import CompanySelector from "@/components/CompanySelector";
+import CompanyDetails from "@/components/CompanyDetails";
 import { FormDataType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -187,6 +188,13 @@ const FormEditor = () => {
           <FormUploadModal />
         </div>
       </header>
+
+      {/* Company Details Section */}
+      {selectedCompanyId && (
+        <div className="mb-6">
+          <CompanyDetails companyId={selectedCompanyId} />
+        </div>
+      )}
 
       <div className="lg:flex gap-6">
         <div className="lg:w-2/3">
