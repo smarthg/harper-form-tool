@@ -5,6 +5,7 @@ import { formDataSchema, companySchema } from "@shared/schema";
 import { z } from "zod";
 import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import multer from 'multer';
+import { getFormDefinition, getFormData, updateFormData } from "./formData";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
@@ -186,6 +187,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error transposing form data:', error);
       res.status(500).json({ message: 'Failed to transpose form data' });
+    }
+  });
+
+  // Get form definition for a specific form type
+  app.get('/api/form-definitions/:formType', requireAuth, async (req, res) => {
+    try {
+      const formType = req.params.formType;
+      
+      if (!formType) {
+        return res.status(400).json({ message: 'Form type is required' });
+      }
+      
+      const formDefinition = await getFormDefinition(formType);
+      res.json(formDefinition);
+    } catch (error) {
+      console.error(`Error fetching ${req.params.formType} form definition:`, error);
+      res.status(500).json({ message: `Failed to fetch form definition` });
+    }
+  });
+
+  // Get form data for a specific form type
+  app.get('/api/form-data/:formType', requireAuth, async (req, res) => {
+    try {
+      const formType = req.params.formType;
+      
+      if (!formType) {
+        return res.status(400).json({ message: 'Form type is required' });
+      }
+      
+      const formData = await getFormData(formType);
+      res.json(formData);
+    } catch (error) {
+      console.error(`Error fetching ${req.params.formType} form data:`, error);
+      res.status(500).json({ message: `Failed to fetch form data` });
+    }
+  });
+
+  // Update form data for a specific form type
+  app.patch('/api/form-data/:formType', requireAuth, async (req, res) => {
+    try {
+      const formType = req.params.formType;
+      const updates = req.body;
+      
+      if (!formType) {
+        return res.status(400).json({ message: 'Form type is required' });
+      }
+      
+      if (!updates || Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: 'No updates provided' });
+      }
+      
+      const updatedFormData = await updateFormData(formType, updates);
+      res.json(updatedFormData);
+    } catch (error) {
+      console.error(`Error updating ${req.params.formType} form data:`, error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Validation error', 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ message: `Failed to update form data` });
     }
   });
 

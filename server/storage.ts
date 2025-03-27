@@ -54,6 +54,11 @@ export interface IStorage {
   getFormData(): Promise<FormDataType>;
   updateFormData(updates: Partial<FormDataType>): Promise<FormDataType>;
   
+  // ACORD 125 form data methods
+  initializeAcord125FormData(): Promise<Record<string, any>>;
+  getAcord125FormData(): Promise<Record<string, any>>;
+  updateAcord125FormData(updates: Record<string, any>): Promise<Record<string, any>>;
+  
   // Form extraction methods
   extractFormData(fileBuffer: Buffer): Promise<Partial<FormDataType>>;
   transposeFormData(extractedData: Partial<FormDataType>): Promise<FormDataType>;
@@ -66,6 +71,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private companies: Map<number, Company>;
   private formData: FormDataType;
+  private acord125FormData: Record<string, any> = {};
   currentId: number;
   currentCompanyId: number;
 
@@ -75,8 +81,75 @@ export class MemStorage implements IStorage {
     this.currentId = 1;
     this.currentCompanyId = 1;
     this.formData = { ...defaultFormData };
+    this.acord125FormData = {}; // Initialize empty ACORD 125 form data
     
     // We'll fetch companies from the API instead of using static sample data
+  }
+  
+  /**
+   * Initialize ACORD 125 form data with defaults
+   */
+  async initializeAcord125FormData(): Promise<Record<string, any>> {
+    // Initialize with empty data or defaults if needed
+    this.acord125FormData = {
+      agency: "",
+      contactName: "",
+      phone: "",
+      fax: "",
+      email: "",
+      code: "",
+      subcode: "",
+      agencyCustomerId: "",
+      namedInsured: "",
+      glCode: "",
+      sic: "",
+      naics: "",
+      feinOrSocSec: "",
+      businessPhone: "",
+      websiteAddress: "",
+      businessType: "",
+      proposedEffDate: "",
+      proposedExpDate: "",
+      billingPlan: "",
+      paymentPlan: "",
+      methodOfPayment: "",
+      audit: false,
+      deposit: "",
+      minimumPremium: "",
+      policyPremium: ""
+    };
+    
+    return this.acord125FormData;
+  }
+  
+  /**
+   * Get ACORD 125 form data
+   */
+  async getAcord125FormData(): Promise<Record<string, any>> {
+    // Initialize if not already set
+    if (Object.keys(this.acord125FormData).length === 0) {
+      await this.initializeAcord125FormData();
+    }
+    
+    return this.acord125FormData;
+  }
+  
+  /**
+   * Update ACORD 125 form data
+   */
+  async updateAcord125FormData(updates: Record<string, any>): Promise<Record<string, any>> {
+    // Initialize if not already set
+    if (Object.keys(this.acord125FormData).length === 0) {
+      await this.initializeAcord125FormData();
+    }
+    
+    // Apply updates
+    this.acord125FormData = {
+      ...this.acord125FormData,
+      ...updates
+    };
+    
+    return this.acord125FormData;
   }
 
   async getUser(id: number): Promise<User | undefined> {
