@@ -345,9 +345,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No form data provided' });
       }
       
-      // Proceed with any available data, even if incomplete
-      // The server-side mapping function will handle missing values with defaults
-      
       // Check if Anvil API key is configured
       if (process.env.ANVIL_API_KEY) {
         initializeAnvil(process.env.ANVIL_API_KEY);
@@ -357,20 +354,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Fill the PDF form with Anvil
-      // The data is already in the expected format from the client
-      console.log('Received data structure for Anvil PDF filling:', Object.keys(formData));
+      // Pass the already formatted data directly to Anvil
+      // No need to transform it again since the client-side already formatted it
+      console.log('Received data for Anvil PDF filling:', 
+        formData.title ? 'Pre-formatted' : 'Raw form data');
       
-      const filledPdf = await fillPdf(formData);
-      
-      // Store the filled PDF temporarily
-      const pdfUrl = storePdfTemporarily(filledPdf);
-      
-      // Return the URL to the filled PDF
-      res.json({
-        message: 'PDF filled successfully',
-        pdfUrl
-      });
+      // If client has already formatted it, use it directly
+      if (formData.title && formData.data) {
+        console.log('Using pre-formatted Anvil data');
+        console.log('Top-level keys:', Object.keys(formData));
+        console.log('Data keys:', Object.keys(formData.data));
+        
+        // Use the data directly as it's already in the correct format
+        const filledPdf = await fillPdf(formData);
+        
+        // Store the filled PDF temporarily
+        const pdfUrl = storePdfTemporarily(filledPdf);
+        
+        // Return the URL to the filled PDF
+        return res.json({
+          message: 'PDF filled successfully using client formatting',
+          pdfUrl
+        });
+      } else {
+        // Otherwise use server-side formatting (legacy support)
+        console.log('Using server-side formatting');
+        const filledPdf = await fillPdf(formData);
+        
+        // Store the filled PDF temporarily
+        const pdfUrl = storePdfTemporarily(filledPdf);
+        
+        // Return the URL to the filled PDF
+        return res.json({
+          message: 'PDF filled successfully using server formatting',
+          pdfUrl
+        });
+      }
     } catch (error) {
       console.error('Error filling PDF with Anvil:', error);
       res.status(500).json({ 

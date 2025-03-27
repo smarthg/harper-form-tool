@@ -49,46 +49,32 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
   }
   
   try {
-    // We don't need to read the template file anymore since we're using a template ID from Anvil
+    // Check if the data is already formatted for Anvil
+    let anvilData: Record<string, any>;
     
-    // Now we'll use fillPDF with an actual template ID
-    let mappedData = mapDataToAnvilFormat(data);
-    
-    // Include some test data if we get an empty object
-    // This ensures we have something to send to Anvil for testing
-    if (Object.keys(mappedData).length === 0) {
-      console.log('Warning: No mapped data available, adding test data for debugging');
-      mappedData = {
-        'named_insured': 'Test Business Name',
-        'mailing_address': '123 Test Street',
-        'mailing_city': 'Test City',
-        'mailing_state': 'TX',
-        'mailing_zip': '12345'
-      };
+    if (data.title && data.data) {
+      // The data is already in the correct format from the client
+      anvilData = data;
+      console.log('Using pre-formatted data from client');
+    } else {
+      // Map the data to Anvil format
+      anvilData = mapDataToAnvilFormat(data);
+      console.log('Using server-side data mapping');
     }
     
-    // Create a final object to send to Anvil
-    const anvilData = mappedData;
+    // Log the data for debugging
+    console.log('Anvil data for PDF filling:', 
+      `Title: ${anvilData.title}, Data fields: ${Object.keys(anvilData.data).length}`);
     
-    // Log the mapped data for debugging
-    console.log('Anvil data for PDF filling:', JSON.stringify(anvilData, null, 2));
-    
-    // When using a template ID, we only need to provide the data
-    // The template is already stored on Anvil's servers
-    const payload = {
-      data: anvilData
-    };
-    
-    let pdfResponse;
+    // Create a simpler payload with just the template ID and the data
+    const templateId = 'gfCWlUgpFz7Bvpb84Obw';
     
     try {
-      // Use the provided template ID from Anvil
-      const templateId = 'gfCWlUgpFz7Bvpb84Obw';
       console.log('Attempting to fill PDF with Anvil using template ID:', templateId);
       
-      // Make the fillPDF request with the payload
-      const response = await anvilClient!.fillPDF(templateId, payload);
-      pdfResponse = response;
+      // Use the simpler format where we pass the entire object as the payload
+      // This matches the example format exactly
+      const response = await anvilClient!.fillPDF(templateId, anvilData);
       
       console.log('Anvil API response status:', response ? 'Success' : 'Empty response');
       console.log('Anvil API response type:', typeof response);
@@ -120,13 +106,13 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
         console.error('Anvil API response missing data property');
         throw new Error('Invalid response format from Anvil API');
       }
+      
+      // Return the filled PDF as a buffer
+      return Buffer.from(response.data, 'base64');
     } catch (anvErr) {
       console.error('Anvil API error details:', anvErr);
       throw anvErr;
     }
-    
-    // Return the filled PDF as a buffer
-    return Buffer.from(pdfResponse.data, 'base64');
   } catch (error) {
     console.error('Error filling PDF with Anvil:', error);
     throw error;
@@ -165,100 +151,66 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
  * @returns Data formatted for Anvil PDF filling
  */
 function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
-  // The Anvil template expects data in a specific format based on the ACORD 125 form
-  // This function will map our form data to match Anvil's expected structure
+  // Create a simpler flat structure that follows the Anvil example payload
+  const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   
-  // Create an object that matches the structure expected by Anvil
+  // Create a flat structure with basic information
   const mappedData: Record<string, any> = {
-    // Transaction Information
-    transactionStatus: data.transactionStatus || "Quote",
-    transactionType: data.transactionType || "New",
-    timeOfDay: data.timeOfDay || "AM",
-    proposedEffectiveDate: data.proposedEffectiveDate || new Date().toISOString().split('T')[0],
-    proposedExpirationDate: data.proposedExpirationDate || new Date().toISOString().split('T')[0],
+    // Basic information with today's date
+    title: "Acord 125",
+    fontSize: 10,
+    textColor: "#333333",
     
-    // Form Basic Information
-    date: new Date().toISOString().split('T')[0],
-    agency: data.agency || "",
-    carrier: data.carrier || "",
-    naicCode: data.naicCode || "",
-    companyPolicyOrProgramName: data.companyPolicyOrProgramName || "",
-    programCode: data.programCode || "",
-    policyNumber: data.policyNumber || "",
-    underwriter: data.underwriter || "",
-    underwriterOffice: data.underwriterOffice || "",
-    agencyCustomerId: data.agencyCustomerId || "",
-    
-    // Applicant Information
-    applicantName: {
-      firstName: data.firstName || "",
-      mi: data.middleInitial || "",
-      lastName: data.lastName || ""
-    },
-    applicantBusinessType: data.businessType || "Corporation",
-    mailingAddress: {
-      street1: data.mailingStreet1 || "",
-      street2: data.mailingStreet2 || "",
-      city: data.mailingCity || "",
-      state: data.mailingState || "",
-      zip: data.mailingZip || "",
-      country: data.mailingCountry || "US"
-    },
-    glCode: data.glCode || "",
-    sic: data.sic || "",
-    naics: data.naics || "",
-    feinOrSocSec: data.feinOrSocSec || "",
-    businessPhone: {
-      num: data.businessPhone || "",
-      region: "US",
-      baseRegion: "US"
-    },
-    websiteAddress: data.websiteAddress || "",
-    
-    // Premises Information
-    premisesInformation1: data.premisesInformation1 ? data.premisesInformation1 : {
-      street1: data.premisesStreet1 || "",
-      street2: data.premisesStreet2 || "",
-      city: data.premisesCity || "",
-      state: data.premisesState || "",
-      zip: data.premisesZip || "",
-      country: data.premisesCountry || "US"
-    },
-    
-    // Nature of Business
-    natureOfBusiness: data.natureOfBusiness || "",
-    descriptionOfPrimaryOperations: data.descriptionOfPrimaryOperations || "",
-    
-    // Business Info
-    fullTimeEmployees: data.fullTimeEmployees || 0,
-    partTimeEmployees: data.partTimeEmployees || 0,
-    annualRevenues: data.annualRevenues || 0,
+    // We're nesting all the actual data under a "data" key
+    // as per the Anvil template example
+    data: {
+      // Transaction Information - with defaults
+      transactionStatus: "Quote",
+      transactionType: "New",
+      date: today,
+      proposedEffectiveDate: data.startDate || today,
+      proposedExpirationDate: data.endDate || today,
+      
+      // Agency Information
+      agency: data.agency || "",
+      agencyCustomerId: data.agencyCustomerId || "",
+      carrier: data.carrier || "",
+      naicCode: data.naicCode || "",
+      policyNumber: data.policyNumber || "",
+      
+      // Applicant Information - using a simpler approach
+      applicantName: {
+        firstName: data.firstName || "Test", // Default value if empty
+        mi: "",
+        lastName: data.lastName || "Client"  // Default value if empty
+      },
+      
+      // Business Type
+      applicantBusinessType: "Corporation",
+      
+      // Simple mailing address
+      mailingAddress: {
+        street1: data.insuredAddress || "123 Main St",
+        street2: "",
+        city: data.insuredCity || "San Francisco",
+        state: data.insuredState || "CA",
+        zip: data.insuredZip || "94103",
+        country: "US"
+      },
+      
+      // Contact Info
+      businessPhone: {
+        num: data.phone || "5555555555",
+        region: "US", 
+        baseRegion: "US"
+      },
+      
+      // Property Info - only include essential fields
+      natureOfBusiness: data.businessNature || "Office",
+      feinOrSocSec: data.insuredFein || ""
+    }
   };
   
-  // Add conditional business type flags
-  if (data.businessType) {
-    mappedData.corporation = data.businessType === "Corporation";
-    mappedData.individual = data.businessType === "Individual";
-    mappedData.partnership = data.businessType === "Partnership";
-    mappedData.jointVenture = data.businessType === "Joint Venture";
-    mappedData.llc = data.businessType === "LLC";
-    mappedData.notForProfitOrg = data.businessType === "Not For Profit Org";
-    mappedData.subchapterSCorporation = data.businessType === "Subchapter \"S\" Corporation";
-    mappedData.trust = data.businessType === "Trust";
-  }
-  
-  // Add premium information if provided
-  if (data.propertyPremium) mappedData.propertyPremium = data.propertyPremium;
-  if (data.commercialGeneralLiabilityPremium) mappedData.commercialGeneralLiabilityPremium = data.commercialGeneralLiabilityPremium;
-  if (data.businessAutoPremium) mappedData.businessAutoPremium = data.businessAutoPremium;
-  if (data.umbrellaPremium) mappedData.umbrellaPremium = data.umbrellaPremium;
-  
-  // Add any other fields that may be in the data
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined && !mappedData[key]) {
-      mappedData[key] = value;
-    }
-  }
-  
+  // Return the simplified structure
   return mappedData;
 }
