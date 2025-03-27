@@ -76,11 +76,7 @@ export class MemStorage implements IStorage {
     this.currentCompanyId = 1;
     this.formData = { ...defaultFormData };
     
-    // Initialize with some sample companies
-    this.companies.set(1, { id: 1, name: "Acme Insurance", code: "ACME" });
-    this.companies.set(2, { id: 2, name: "Global Coverage", code: "GLOBE" });
-    this.companies.set(3, { id: 3, name: "SafeGuard Ltd", code: "SAFE" });
-    this.currentCompanyId = 4;
+    // We'll fetch companies from the API instead of using static sample data
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -146,16 +142,18 @@ export class MemStorage implements IStorage {
         
         // Store the companies in our map
         data.forEach((item, index) => {
+          // Check if the item has company_name as per the API response format
           const company: Company = {
-            id: index + 1,
-            name: item.name || `Company ${index + 1}`,
-            code: item.code || `CODE${index + 1}`
+            id: parseInt(item.id) || index + 1, // Use the actual ID from API
+            name: item.company_name || (item.name || `Company ${index + 1}`), // Try company_name first
+            code: `CODE${index + 1}` // Generate a code if not available
           };
           this.companies.set(company.id, company);
         });
 
         this.currentCompanyId = this.companies.size + 1;
         
+        console.log(`Loaded ${this.companies.size} companies from external API`);
         return Array.from(this.companies.values());
       } else {
         throw new Error('Invalid data format received from API');
