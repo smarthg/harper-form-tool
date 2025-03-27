@@ -123,23 +123,39 @@ export class MemStorage implements IStorage {
       // Create an object to store extracted form data
       const extractedData: Partial<FormDataType> = {};
       
-      // Extract potential personal information
-      const nameRegex = /Name:?\s*([A-Za-z\s.]+)/i;
-      const nameMatch = text.match(nameRegex);
-      if (nameMatch && nameMatch[1]?.trim()) {
-        const fullName = nameMatch[1].trim();
-        const nameParts = fullName.split(' ');
-        
-        if (nameParts.length >= 2) {
-          extractedData.firstName = nameParts[0];
-          extractedData.lastName = nameParts[nameParts.length - 1];
-        } else if (nameParts.length === 1) {
-          extractedData.firstName = nameParts[0];
+      // Extract first name and last name separately
+      const firstNameRegex = /First\s*Name:?\s*([A-Za-z\s.]+)/i;
+      const lastNameRegex = /Last\s*Name:?\s*([A-Za-z\s.]+)/i;
+      
+      const firstNameMatch = text.match(firstNameRegex);
+      if (firstNameMatch && firstNameMatch[1]?.trim()) {
+        extractedData.firstName = firstNameMatch[1].trim();
+      }
+      
+      const lastNameMatch = text.match(lastNameRegex);
+      if (lastNameMatch && lastNameMatch[1]?.trim()) {
+        extractedData.lastName = lastNameMatch[1].trim();
+      }
+      
+      // Fall back to full name parsing if separate fields not found
+      if (!extractedData.firstName && !extractedData.lastName) {
+        const nameRegex = /Name:?\s*([A-Za-z\s.]+)/i;
+        const nameMatch = text.match(nameRegex);
+        if (nameMatch && nameMatch[1]?.trim()) {
+          const fullName = nameMatch[1].trim();
+          const nameParts = fullName.split(' ');
+          
+          if (nameParts.length >= 2) {
+            extractedData.firstName = nameParts[0];
+            extractedData.lastName = nameParts.slice(1).join(' ');
+          } else if (nameParts.length === 1) {
+            extractedData.firstName = nameParts[0];
+          }
         }
       }
       
-      // Extract email
-      const emailRegex = /(?:email|e-mail):?\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i;
+      // Extract email - more precise pattern
+      const emailRegex = /Email\s*(?:Address)?:?\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i;
       const emailMatch = text.match(emailRegex);
       if (emailMatch && emailMatch[1]) {
         extractedData.email = emailMatch[1];
@@ -152,11 +168,20 @@ export class MemStorage implements IStorage {
         extractedData.phone = phoneMatch[1].trim();
       }
       
-      // Extract policy number
-      const policyNumberRegex = /(?:policy|policy\s*number|policy\s*#):?\s*([A-Za-z0-9-]+)/i;
+      // Extract policy number with more precise pattern
+      const policyNumberRegex = /Policy\s*Number:?\s*([A-Za-z0-9-]+)/i;
       const policyNumberMatch = text.match(policyNumberRegex);
       if (policyNumberMatch && policyNumberMatch[1]) {
         extractedData.policyNumber = policyNumberMatch[1];
+      }
+      
+      // Check for POL prefix patterns if the first pattern doesn't match
+      if (!extractedData.policyNumber) {
+        const polPrefixRegex = /POL-?([A-Za-z0-9-]+)/i;
+        const polPrefixMatch = text.match(polPrefixRegex);
+        if (polPrefixMatch) {
+          extractedData.policyNumber = polPrefixMatch[0]; // Include the POL prefix
+        }
       }
       
       // Extract policy type
@@ -170,52 +195,138 @@ export class MemStorage implements IStorage {
         extractedData.policyType = 'health';
       }
       
-      // Extract dates
-      const startDateRegex = /(?:start|effective|issue)\s*date:?\s*(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/i;
-      const startDateMatch = text.match(startDateRegex);
-      if (startDateMatch && startDateMatch[1]) {
-        const dateStr = startDateMatch[1];
+      // Extract dates - more precise patterns
+      // First try with specific field labels
+      const startDatePrefixRegex = /Start\s*Date:?\s*([A-Za-z0-9,\s.\/\-]+)/i;
+      const startDatePrefixMatch = text.match(startDatePrefixRegex);
+      if (startDatePrefixMatch && startDatePrefixMatch[1]?.trim()) {
+        const dateStr = startDatePrefixMatch[1].trim();
         try {
-          const date = new Date(dateStr);
-          extractedData.startDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          // Handle month names
+          if (dateStr.match(/January|February|March|April|May|June|July|August|September|October|November|December/i)) {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+              extractedData.startDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            } else {
+              extractedData.startDate = dateStr;
+            }
+          } else {
+            const date = new Date(dateStr);
+            extractedData.startDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          }
         } catch (e) {
           // If parsing fails, just store the string as-is
           extractedData.startDate = dateStr;
         }
+      } else {
+        // Fall back to generic pattern
+        const startDateRegex = /(?:start|effective|issue)\s*date:?\s*(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/i;
+        const startDateMatch = text.match(startDateRegex);
+        if (startDateMatch && startDateMatch[1]) {
+          const dateStr = startDateMatch[1];
+          try {
+            const date = new Date(dateStr);
+            extractedData.startDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          } catch (e) {
+            // If parsing fails, just store the string as-is
+            extractedData.startDate = dateStr;
+          }
+        }
       }
       
-      const endDateRegex = /(?:end|expiration|expiry)\s*date:?\s*(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/i;
-      const endDateMatch = text.match(endDateRegex);
-      if (endDateMatch && endDateMatch[1]) {
-        const dateStr = endDateMatch[1];
+      // End date with specific field label
+      const endDatePrefixRegex = /End\s*Date:?\s*([A-Za-z0-9,\s.\/\-]+)/i;
+      const endDatePrefixMatch = text.match(endDatePrefixRegex);
+      if (endDatePrefixMatch && endDatePrefixMatch[1]?.trim()) {
+        const dateStr = endDatePrefixMatch[1].trim();
         try {
-          const date = new Date(dateStr);
-          extractedData.endDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          // Handle month names
+          if (dateStr.match(/January|February|March|April|May|June|July|August|September|October|November|December/i)) {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+              extractedData.endDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            } else {
+              extractedData.endDate = dateStr;
+            }
+          } else {
+            const date = new Date(dateStr);
+            extractedData.endDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          }
         } catch (e) {
           // If parsing fails, just store the string as-is
           extractedData.endDate = dateStr;
         }
+      } else {
+        // Fall back to generic pattern
+        const endDateRegex = /(?:end|expiration|expiry)\s*date:?\s*(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{4}[\/\.-]\d{1,2}[\/\.-]\d{1,2})/i;
+        const endDateMatch = text.match(endDateRegex);
+        if (endDateMatch && endDateMatch[1]) {
+          const dateStr = endDateMatch[1];
+          try {
+            const date = new Date(dateStr);
+            extractedData.endDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+          } catch (e) {
+            // If parsing fails, just store the string as-is
+            extractedData.endDate = dateStr;
+          }
+        }
       }
       
-      // Extract coverage amount
-      const coverageRegex = /(?:coverage|coverage\s*amount|coverage\s*limit):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
-      const coverageMatch = text.match(coverageRegex);
-      if (coverageMatch && coverageMatch[1]) {
-        extractedData.coverageAmount = coverageMatch[1];
+      // Extract coverage amount with field label first
+      const coverageLabelRegex = /Coverage\s*Amount:?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+      const coverageLabelMatch = text.match(coverageLabelRegex);
+      if (coverageLabelMatch && coverageLabelMatch[1]) {
+        extractedData.coverageAmount = coverageLabelMatch[1].replace(/[$,]/g, '');
+      } else {
+        // Generic pattern as fallback
+        const coverageRegex = /(?:coverage|coverage\s*amount|coverage\s*limit):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+        const coverageMatch = text.match(coverageRegex);
+        if (coverageMatch && coverageMatch[1]) {
+          extractedData.coverageAmount = coverageMatch[1].replace(/[$,]/g, '');
+        }
+        
+        // Look for $ amounts that might be coverage
+        if (!extractedData.coverageAmount) {
+          const dollarAmountRegex = /\$\s*([0-9,]+(?:\.[0-9]{2})?)/g;
+          let match;
+          let largestAmount = 0;
+          
+          while ((match = dollarAmountRegex.exec(text)) !== null) {
+            const amount = parseFloat(match[1].replace(/,/g, ''));
+            if (amount > largestAmount && amount >= 10000) { // Assume coverage is larger than 10k
+              largestAmount = amount;
+              extractedData.coverageAmount = String(amount);
+            }
+          }
+        }
       }
       
-      // Extract deductible
-      const deductibleRegex = /(?:deductible):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
-      const deductibleMatch = text.match(deductibleRegex);
-      if (deductibleMatch && deductibleMatch[1]) {
-        extractedData.deductible = deductibleMatch[1];
+      // Extract deductible with specific field label
+      const deductibleLabelRegex = /Deductible:?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+      const deductibleLabelMatch = text.match(deductibleLabelRegex);
+      if (deductibleLabelMatch && deductibleLabelMatch[1]) {
+        extractedData.deductible = deductibleLabelMatch[1].replace(/[$,]/g, '');
+      } else {
+        // Generic pattern as fallback
+        const deductibleRegex = /(?:deductible):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+        const deductibleMatch = text.match(deductibleRegex);
+        if (deductibleMatch && deductibleMatch[1]) {
+          extractedData.deductible = deductibleMatch[1].replace(/[$,]/g, '');
+        }
       }
       
-      // Extract monthly premium
-      const premiumRegex = /(?:premium|monthly\s*premium):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
-      const premiumMatch = text.match(premiumRegex);
-      if (premiumMatch && premiumMatch[1]) {
-        extractedData.monthlyPremium = premiumMatch[1];
+      // Extract monthly premium with specific field label
+      const premiumLabelRegex = /Monthly\s*Premium:?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+      const premiumLabelMatch = text.match(premiumLabelRegex);
+      if (premiumLabelMatch && premiumLabelMatch[1]) {
+        extractedData.monthlyPremium = premiumLabelMatch[1].replace(/[$,]/g, '');
+      } else {
+        // Generic pattern as fallback
+        const premiumRegex = /(?:premium|monthly\s*premium):?\s*\$?\s*([0-9,]+(\.[0-9]{2})?)/i;
+        const premiumMatch = text.match(premiumRegex);
+        if (premiumMatch && premiumMatch[1]) {
+          extractedData.monthlyPremium = premiumMatch[1].replace(/[$,]/g, '');
+        }
       }
       
       // Extract coverage type
