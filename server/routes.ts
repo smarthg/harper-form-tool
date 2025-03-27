@@ -345,10 +345,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No form data provided' });
       }
       
-      // Verify required fields for the ACORD 125 form
-      if (!formData.applicantName?.firstName || !formData.applicantName?.lastName) {
-        return res.status(400).json({ message: 'Applicant name is required' });
-      }
+      // Proceed with any available data, even if incomplete
+      // The server-side mapping function will handle missing values with defaults
       
       // Check if Anvil API key is configured
       if (process.env.ANVIL_API_KEY) {
