@@ -73,7 +73,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
     
     const fieldId = `${sectionName}-${field.name}`;
-    const fieldValue = formData[field.name] !== undefined ? formData[field.name] : '';
+    // Handle null values by converting them to empty strings to avoid React warnings
+    const fieldValue = formData[field.name] !== undefined && formData[field.name] !== null ? formData[field.name] : '';
     const isHighlighted = highlightedField === field.name;
     
     // Common props for input elements

@@ -226,8 +226,30 @@ const FormEditor = () => {
       };
       setActivityLog((prev) => [newActivity, ...prev]);
 
-      // Update the form data
-      await updateFormMutation.mutateAsync({ field, value });
+      // For ACORD 125 form fields, update the ACORD 125 form data specifically
+      const acord125Fields = [
+        'namedInsured', 'businessPhone', 'email', 'feinOrSocSec', 'websiteAddress', 
+        'mailingAddress', 'mailingCity', 'mailingState', 'mailingZipCode', 
+        'natureOfBusiness', 'descriptionOfPrimaryOperations', 'businessType',
+        'dateBusinessStarted', 'annualGrossSales', 'numEmployees', 'deductible', 'coverageAmount'
+      ];
+      
+      if (acord125Fields.includes(field)) {
+        // Update ACORD 125 form data
+        await apiRequest("/api/form-data/acord125", {
+          method: "PATCH",
+          body: JSON.stringify({ [field]: value }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+      } else {
+        // Update the main form data
+        await updateFormMutation.mutateAsync({ field, value });
+      }
+
+      // Refresh form data
+      queryClient.invalidateQueries({ queryKey: ["/api/form-data/acord125"] });
 
       // Clear highlight after 3 seconds
       setTimeout(() => {
@@ -271,6 +293,7 @@ const FormEditor = () => {
   // Helper function to get field label for display
   const getFieldLabel = (fieldId: string): string => {
     const labels: Record<string, string> = {
+      // Standard form fields
       firstName: "First Name",
       lastName: "Last Name",
       email: "Email Address",
@@ -284,6 +307,24 @@ const FormEditor = () => {
       coverageType: "Coverage Type",
       monthlyPremium: "Monthly Premium",
       companyId: "Company",
+      
+      // ACORD 125 form fields
+      namedInsured: "Business Name",
+      businessPhone: "Business Phone",
+      feinOrSocSec: "Federal Employer ID",
+      websiteAddress: "Website",
+      mailingAddress: "Mailing Address",
+      mailingCity: "City",
+      mailingState: "State",
+      mailingZipCode: "ZIP Code",
+      natureOfBusiness: "Nature of Business",
+      descriptionOfPrimaryOperations: "Operations Description",
+      businessType: "Business Entity Type",
+      dateBusinessStarted: "Business Start Date",
+      annualGrossSales: "Annual Revenue",
+      numEmployees: "Number of Employees",
+      naics: "NAICS Code",
+      sic: "SIC Code"
     };
     return labels[fieldId] || fieldId;
   };

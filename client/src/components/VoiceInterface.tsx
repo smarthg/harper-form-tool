@@ -294,19 +294,19 @@ const VoiceInterface = ({
         <ul className="text-sm text-neutral-400 space-y-2">
           <li className="flex items-start">
             <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Change the deductible to $2,000"
+            "Set the business name to ABC Construction"
           </li>
           <li className="flex items-start">
             <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Update my email to name@example.com"
+            "Update the email to contact@example.com"
           </li>
           <li className="flex items-start">
             <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Set the coverage amount to $200,000"
+            "Change the mailing address to 123 Main Street"
           </li>
           <li className="flex items-start">
             <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Change the policy type to Home Insurance"
+            "Set the business type to LLC"
           </li>
         </ul>
       </div>
