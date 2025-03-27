@@ -1,7 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import Anvil from '@anvilco/anvil';
 import dotenv from 'dotenv';
+
+// Get the current directory path (equivalent to __dirname in CommonJS)
+const currentFilePath = fileURLToPath(import.meta.url);
+const currentDirPath = path.dirname(currentFilePath);
+
+// Forward declaration for mapDataToAnvilFormat
+function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any>;
 
 // Load environment variables
 dotenv.config();
@@ -42,7 +50,7 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
   
   try {
     // Path to the PDF template
-    const pdfTemplateFile = path.join(__dirname, '../../client/public/templates/acord125.pdf');
+    const pdfTemplateFile = path.join(currentDirPath, '../../client/public/templates/acord125.pdf');
     
     // Read the PDF template as a buffer
     const pdfTemplate = fs.readFileSync(pdfTemplateFile);
@@ -50,28 +58,18 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
     // Cast file to base64
     const pdfTemplateBase64 = pdfTemplate.toString('base64');
     
-    // Fill the PDF with Anvil
-    // The Anvil API expects a specific format for filling PDFs
+    // Prepare payload for the Anvil API
+    // For direct PDF filling (not using a template from Anvil), we need to provide the PDF file
     const payload = {
       title: 'ACORD 125 Commercial Insurance Application',
-      data: data,
-      file: pdfTemplateBase64
+      data: mapDataToAnvilFormat(data),  // Convert data to Anvil's expected format
+      file: pdfTemplateBase64,            // The PDF file encoded as base64
+      castEid: 'cast-eid-test'            // We use any string as a castEid when not using a template
     };
     
-    // Fill PDF with a temporary Eid (this is mock for development)
-    // In production, you would use an actual Eid from your Anvil account
-    const tempEid = 'temp-eid';
-    
     // Make the fill PDF request using the Anvil client
-    // The API signature is fillPDF(eid, payload, options)
-    const response = await anvilClient!.fillPDF(
-      tempEid,
-      {
-        data,
-        file: pdfTemplateBase64
-      },
-      {} // Empty options object as third parameter
-    );
+    // For direct PDF filling without a template, we use generatePDF method
+    const response = await anvilClient!.generatePDF(payload);
     
     // The response from Anvil API is an object with data property containing PDF as base64 string
     if (!response || !response.data) {
@@ -97,7 +95,7 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
   const filename = `acord125_filled_${timestamp}.pdf`;
   
   // Create directory if it doesn't exist
-  const uploadDir = path.join(__dirname, '../../client/public/uploads');
+  const uploadDir = path.join(currentDirPath, '../../client/public/uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -110,4 +108,58 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
   
   // Return the URL to download the filled PDF
   return `/uploads/${filename}`;
+}
+
+/**
+ * Map form data to Anvil's expected format for PDF filling
+ * @param data Form data from the application
+ * @returns Data formatted for Anvil PDF filling
+ */
+function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
+  // Create a mapping of our form fields to Anvil fields
+  // This will depend on the field names in the PDF form
+  
+  // For ACORD 125 form, convert our field names to match the PDF form field names
+  // This is a simplified mapping; you would need to expand this based on your actual PDF form fields
+  const mapping: Record<string, string> = {
+    // Applicant Information
+    'namedInsured': 'NAMED_INSURED',
+    'dba': 'DBA',
+    'mailingAddress': 'MAILING_ADDRESS',
+    'mailingCity': 'MAILING_CITY',
+    'mailingState': 'MAILING_STATE',
+    'mailingZipCode': 'MAILING_ZIP',
+    'email': 'EMAIL',
+    'businessPhone': 'PHONE',
+    'websiteAddress': 'WEBSITE',
+    'feinOrSocSec': 'FEIN',
+    
+    // Business Information
+    'natureOfBusiness': 'NATURE_OF_BUSINESS',
+    'descriptionOfPrimaryOperations': 'DESCRIPTION_OF_OPERATIONS',
+    'businessType': 'BUSINESS_TYPE',
+    'naics': 'NAICS',
+    'sic': 'SIC',
+
+    // Agency Information
+    'agency': 'AGENCY_NAME',
+    'contactName': 'AGENCY_CONTACT',
+    'phone': 'AGENCY_PHONE',
+    'agencyCustomerID': 'AGENCY_CUSTOMER_ID',
+    
+    // Additional fields can be added as needed
+  };
+  
+  // Create a new object with the mapped fields
+  const mappedData: Record<string, any> = {};
+  
+  // Copy data from our form to the mapped fields
+  for (const [ourField, anvilField] of Object.entries(mapping)) {
+    if (data[ourField] !== undefined) {
+      mappedData[anvilField] = data[ourField];
+    }
+  }
+  
+  // Return the mapped data
+  return mappedData;
 }
