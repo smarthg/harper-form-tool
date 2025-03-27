@@ -38,6 +38,11 @@ export interface IStorage {
   getAcord125FormData(): Promise<Record<string, any>>;
   updateAcord125FormData(updates: Record<string, any>): Promise<Record<string, any>>;
   
+  // ACORD 126 form data methods
+  initializeAcord126FormData(): Promise<Record<string, any>>;
+  getAcord126FormData(): Promise<Record<string, any>>;
+  updateAcord126FormData(updates: Record<string, any>): Promise<Record<string, any>>;
+  
   // External API methods
   fetchCompaniesFromApi(): Promise<Company[]>;
 }
@@ -47,6 +52,7 @@ export class MemStorage implements IStorage {
   private companies: Map<number, Company>;
   private formData: FormDataType;
   private acord125FormData: Record<string, any> = {};
+  private acord126FormData: Record<string, any> = {};
   currentId: number;
   currentCompanyId: number;
 
@@ -269,6 +275,90 @@ export class MemStorage implements IStorage {
     };
     
     return this.formData;
+  }
+
+  /**
+   * Initialize ACORD 126 form data with defaults
+   */
+  async initializeAcord126FormData(): Promise<Record<string, any>> {
+    // Initialize with empty data or defaults if needed
+    this.acord126FormData = {
+      agencyCustomerId: "",
+      effectiveDate: "",
+      agency: "",
+      carrier: "",
+      naicCode: "",
+      policyNumber: "",
+      applicantFirstNamedInsured: "",
+      coverageType: "",
+      claimsOccurrence: "",
+      generalAggregate: "",
+      limitAppliesPer: [],
+      productsCompletedOperationsAggregate: "",
+      personalAdvertisingInjury: "",
+      eachOccurrence: "",
+      damageToRentedPremises: "",
+      medicalExpense: "",
+      employeeBenefits: "",
+      propertyDamage: "",
+      bodilyInjury: "",
+      deductibleType: "",
+      premiseOperations: "",
+      products: "",
+      other: "",
+      total: "",
+      otherCoverages: "",
+      umUimCoverage: "",
+      medicalPaymentsCoverage: "",
+      classificationDescription: "",
+      ratingPremiumBasis: [],
+      proposedRetroactiveDate: "",
+      entryDateUninterruptedClaimsMadeCoverage: "",
+      excludedUninsuredSelfInsured: "",
+      tailCoveragePurchased: "",
+      deductiblePerClaim: "",
+      numberOfEmployees: "",
+      employeesCoveredByBenefitsPlans: "",
+      retroactiveDate: "",
+      drawPlansDesigns: "",
+      operationsIncludeBlasting: "",
+      operationsIncludeExcavation: "",
+      subcontractorsCoveragesLessThanYours: "",
+      subcontractorsWithoutCertificate: "",
+      leaseEquipmentToOthers: ""
+    };
+    
+    return this.acord126FormData;
+  }
+  
+  /**
+   * Get ACORD 126 form data
+   */
+  async getAcord126FormData(): Promise<Record<string, any>> {
+    // Initialize if not already set
+    if (Object.keys(this.acord126FormData).length === 0) {
+      await this.initializeAcord126FormData();
+    }
+    
+    return this.acord126FormData;
+  }
+  
+  /**
+   * Update ACORD 126 form data
+   */
+  async updateAcord126FormData(updates: Record<string, any>): Promise<Record<string, any>> {
+    // Initialize if not already set
+    if (Object.keys(this.acord126FormData).length === 0) {
+      await this.initializeAcord126FormData();
+    }
+    
+    // Apply updates
+    this.acord126FormData = {
+      ...this.acord126FormData,
+      ...updates
+    };
+    
+    return this.acord126FormData;
   }
 
   /**

@@ -1,5 +1,6 @@
 import { storage } from '../storage';
 import { getAcord125Definition } from '../formDefinitions/acord125';
+import { getAcord126Definition } from '../formDefinitions/acord126';
 
 /**
  * Get the form definition for a specific form type
@@ -10,6 +11,8 @@ export async function getFormDefinition(formType: string) {
   switch (formType) {
     case 'acord125':
       return await getAcord125Definition();
+    case 'acord126':
+      return await getAcord126Definition();
     default:
       throw new Error(`Form type '${formType}' not supported`);
   }
@@ -24,6 +27,8 @@ export async function getFormData(formType: string) {
   switch (formType) {
     case 'acord125':
       return await storage.getAcord125FormData();
+    case 'acord126':
+      return await storage.getAcord126FormData();
     default:
       throw new Error(`Form type '${formType}' not supported`);
   }
@@ -39,6 +44,8 @@ export async function updateFormData(formType: string, updates: Record<string, a
   switch (formType) {
     case 'acord125':
       return await storage.updateAcord125FormData(updates);
+    case 'acord126':
+      return await storage.updateAcord126FormData(updates);
     default:
       throw new Error(`Form type '${formType}' not supported`);
   }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Acord125Form from './Acord125Form';
+import Acord126Form from './Acord126Form';
 import { FormDataType } from '@shared/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -50,6 +51,15 @@ const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormP
             readonly={false}
           />
         );
+      case 'acord126':
+        return (
+          <Acord126Form
+            highlightedField={highlightedField}
+            isPending={isPending}
+            onValueChange={handleValueChange}
+            readonly={false}
+          />
+        );
       default:
         return <div className="p-8 text-center">Form type not supported</div>;
     }
@@ -60,15 +70,13 @@ const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormP
       <Tabs defaultValue="acord125" onValueChange={setActiveFormType} className="w-full">
         <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
           <TabsTrigger value="acord125">ACORD 125</TabsTrigger>
-          <TabsTrigger value="other" disabled>Other Forms</TabsTrigger>
+          <TabsTrigger value="acord126">ACORD 126</TabsTrigger>
         </TabsList>
         <TabsContent value="acord125" className="mt-4">
           {renderFormByType()}
         </TabsContent>
-        <TabsContent value="other" className="mt-4">
-          <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
-            <p className="text-neutral-500">Other form types will be available in the future</p>
-          </div>
+        <TabsContent value="acord126" className="mt-4">
+          {renderFormByType()}
         </TabsContent>
       </Tabs>
     </div>
