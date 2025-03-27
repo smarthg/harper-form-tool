@@ -77,11 +77,12 @@ export async function mapCompanyDataToForm(
     
     console.log('Initial mappings result:', JSON.stringify(initialMappings, null, 2));
     
-    // Then, process any additional chunks if needed by focusing on specific form sections
+    // Then, process any additional chunks to enhance the mapping with specific form sections
     let finalMappings = { ...initialMappings };
     
-    // Try to enhance the mappings with more specific sections if initial mapping is too small
-    if (Object.keys(initialMappings).length < 5) {
+    // Always try to enhance the mappings with additional specific chunks
+    // This ensures we get the most complete mapping possible
+    {
       // Get additional mappings for specific form sections
       try {
         // Process address information 
@@ -100,7 +101,12 @@ export async function mapCompanyDataToForm(
           const addressMappings = await processCompanyDataChunk(
             addressData,
             formFields,
-            'Map this address information to form fields like mailingAddress, locationAddress, etc.'
+            'Map this address information to ACORD 125 form fields. Use these specific mappings:\n' +
+            '- street_address_1 -> mailingAddress\n' +
+            '- city -> mailingCity\n' +
+            '- state -> mailingState\n' +
+            '- postal_code -> mailingZipCode\n' +
+            'Also map to location fields if appropriate (locationAddress, locationCity, etc.)'
           );
           
           console.log('Address mappings result:', JSON.stringify(addressMappings, null, 2));
@@ -121,12 +127,44 @@ export async function mapCompanyDataToForm(
           const businessTypeMappings = await processCompanyDataChunk(
             businessTypeData,
             formFields,
-            'Map this business entity information to businessType field (like corporation, llc, etc.)'
+            'Map this business entity information to the businessType field. Use these specific mappings:\n' +
+            '- If legal_entity_type or company_type contains "LLC" -> businessType: "LLC"\n' +
+            '- If legal_entity_type or company_type contains "Corp" -> businessType: "Corporation"\n' +
+            '- If legal_entity_type or company_type contains "Partner" -> businessType: "Partnership"\n' +
+            '- If legal_entity_type or company_type contains "Individual" -> businessType: "Individual"\n' +
+            'Also include the company_description as descriptionOfPrimaryOperations if available.'
           );
           
           console.log('Business type mappings result:', JSON.stringify(businessTypeMappings, null, 2));
           
           finalMappings = { ...finalMappings, ...businessTypeMappings };
+        }
+        
+        // Process industry and revenue information
+        if (company.company_industry || company.company_annual_revenue || company.company_employee_count) {
+          const businessInfoData = {
+            industry: company.company_industry,
+            sub_industry: company.company_sub_industry,
+            annual_revenue: company.company_annual_revenue,
+            employees: company.company_employee_count,
+            year_founded: company.company_year_founded
+          };
+          
+          console.log('Business info data chunk:', JSON.stringify(businessInfoData, null, 2));
+          
+          const businessInfoMappings = await processCompanyDataChunk(
+            businessInfoData,
+            formFields,
+            'Map this business information to ACORD 125 form fields. Use these specific mappings:\n' +
+            '- industry -> natureOfBusiness\n' +
+            '- annual_revenue -> annualGrossSales\n' +
+            '- employees -> numEmployees\n' +
+            '- year_founded -> dateBusinessStarted\n'
+          );
+          
+          console.log('Business info mappings result:', JSON.stringify(businessInfoMappings, null, 2));
+          
+          finalMappings = { ...finalMappings, ...businessInfoMappings };
         }
       } catch (chunkError) {
         console.error('Error processing additional data chunks:', chunkError);
@@ -160,6 +198,11 @@ function extractImportantCompanyData(company: any): Record<string, any> {
     company_website: company.company_website,
     company_year_founded: company.company_year_founded,
     company_ein: company.company_ein,
+    street_address: company.company_street_address_1,
+    street_address_2: company.company_street_address_2,
+    city: company.company_city,
+    state: company.company_state,
+    zip_code: company.company_postal_code,
     address: `${company.company_street_address_1 || ''} ${company.company_street_address_2 || ''}, ${company.company_city || ''}, ${company.company_state || ''} ${company.company_postal_code || ''}`.trim(),
     annual_revenue: company.company_annual_revenue,
     employees: company.company_employee_count,
@@ -193,6 +236,28 @@ async function processCompanyDataChunk(
     
     ${instructions}
     
+    Here are some common field mappings for ACORD 125 forms:
+    - company_name -> namedInsured
+    - company_primary_phone -> businessPhone
+    - company_primary_email -> email
+    - company_description -> descriptionOfPrimaryOperations
+    - company_naics_code -> naics
+    - company_sic_code -> sic
+    - company_website -> websiteAddress
+    - company_ein -> feinOrSocSec
+    - company_year_founded -> dateBusinessStarted
+    - street_address -> mailingAddress (line 1)
+    - city -> mailingCity
+    - state -> mailingState
+    - zip_code -> mailingZipCode
+    - industry -> natureOfBusiness
+    
+    For business types:
+    - LLC -> businessType: "LLC"
+    - Corporation -> businessType: "Corporation"
+    - Individual -> businessType: "Individual"
+    - Partnership -> businessType: "Partnership"
+    
     Return ONLY a JSON object with form field names as keys and extracted values from the company data as values.
     If you can't find a match for a field, omit that field completely from the response.
     For example: { "namedInsured": "ACME Corporation", "businessPhone": "555-123-4567" }
@@ -202,7 +267,7 @@ async function processCompanyDataChunk(
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are a helpful assistant that maps company data to insurance form fields accurately. Only return valid JSON with appropriate field mappings.' },
+        { role: 'system', content: 'You are a helpful assistant that maps company data to insurance form fields accurately. You should be thorough and map as many fields as possible from the provided data. Only return valid JSON with appropriate field mappings.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.1, // Low temperature for more deterministic results
