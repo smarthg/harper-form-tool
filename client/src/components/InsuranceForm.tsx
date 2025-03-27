@@ -1,4 +1,5 @@
 import { FormDataType } from "@shared/schema";
+import FormDownloadButton from "./FormDownloadButton";
 
 interface InsuranceFormProps {
   formData: FormDataType;
@@ -29,7 +30,10 @@ const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormP
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-medium text-neutral-500 mb-4">Insurance Policy Details</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-medium text-neutral-500">Insurance Policy Details</h2>
+        <FormDownloadButton formData={formData} />
+      </div>
 
       <form id="insuranceForm">
         {/* Personal Information Section */}

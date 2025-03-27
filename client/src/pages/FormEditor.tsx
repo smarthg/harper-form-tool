@@ -5,7 +5,7 @@ import InsuranceForm from "@/components/InsuranceForm";
 import VoiceInterface from "@/components/VoiceInterface";
 import ActivityLog from "@/components/ActivityLog";
 import { FormDataType } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type ActivityItem = {
   id: string;
