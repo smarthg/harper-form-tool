@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, Settings, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
 import { transcribeAudio, processCommandWithAI, isOpenAIInitialized, initializeOpenAI } from "@/lib/openaiService";
+import AudioRecorderPolyfill from 'audio-recorder-polyfill';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,14 @@ const VoiceInterface = ({
     }
   };
 
+  // Setup the audio recorder polyfill
+  useEffect(() => {
+    // Register the polyfill if necessary
+    if (typeof window !== 'undefined' && !window.MediaRecorder) {
+      window.MediaRecorder = AudioRecorderPolyfill;
+    }
+  }, []);
+
   const startListening = async () => {
     if (!apiKeySet) {
       setIsDialogOpen(true);
@@ -111,18 +120,50 @@ const VoiceInterface = ({
       audioChunksRef.current = [];
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      
+      // Check if we should use the polyfill
+      const shouldUsePolyfill = !window.MediaRecorder || 
+        (!MediaRecorder.isTypeSupported('audio/mp3') && 
+         !MediaRecorder.isTypeSupported('audio/webm') && 
+         !MediaRecorder.isTypeSupported('audio/wav'));
+      
+      // Determine the best mime type for recording
+      const recordingMimeType = MediaRecorder.isTypeSupported('audio/mp3') 
+        ? 'audio/mp3' 
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/wav';
+      
+      if (shouldUsePolyfill) {
+        console.log("Using audio-recorder-polyfill");
+        mediaRecorderRef.current = new AudioRecorderPolyfill(stream);
+      } else {
+        console.log(`Using native MediaRecorder with mime type: ${recordingMimeType}`);
+        mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: recordingMimeType });
+      }
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      if (!mediaRecorderRef.current) {
+        throw new Error("Failed to initialize MediaRecorder");
+      }
+      
+      const recorder = mediaRecorderRef.current;
+        
+      recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
-      mediaRecorderRef.current.onstop = async () => {
+      recorder.onstop = async () => {
         setIsProcessing(true);
         try {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          // Get the mime type from the recorder if possible, otherwise use a safe default
+          const blobMimeType = shouldUsePolyfill 
+            ? 'audio/wav' // The polyfill outputs WAV format
+            : recorder.mimeType || 'audio/wav';
+            
+          const audioBlob = new Blob(audioChunksRef.current, { type: blobMimeType });
+          console.log(`Audio blob created: type=${audioBlob.type}, size=${audioBlob.size} bytes`);
           
           // Transcribe audio with OpenAI
           const text = await transcribeAudio(audioBlob);
@@ -148,7 +189,9 @@ const VoiceInterface = ({
         }
       };
 
-      mediaRecorderRef.current.start();
+      // Start recording with 1 second timeslice to ensure we get data
+      recorder.start(1000);
+      console.log("Recording started with media recorder state:", recorder.state);
     } catch (error: any) {
       console.error("Error starting audio recording:", error);
       setErrorMsg(`Error: ${error.message || "Could not access microphone"}`);
@@ -158,8 +201,9 @@ const VoiceInterface = ({
   
   const stopListening = () => {
     try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.stop();
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
@@ -179,7 +223,7 @@ const VoiceInterface = ({
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-medium text-neutral-500">Voice Commands</h2>
-        {!import.meta.env.VITE_OPENAI_API_KEY && (
+        {!isOpenAIInitialized() && (
           <button
             onClick={() => setIsDialogOpen(true)}
             className="text-neutral-400 hover:text-primary"
@@ -210,7 +254,7 @@ const VoiceInterface = ({
           {isListening ? (
             <Mic className="w-6 h-6" />
           ) : isProcessing ? (
-            <span className="loader"></span>
+            <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
           ) : (
             <Mic className="w-6 h-6" />
           )}

@@ -1,10 +1,15 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client with API key from environment
+// Initialize OpenAI client with API key from environment or localStorage
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('openai_api_key'),
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || 
+          import.meta.env.OPENAI_API_KEY || 
+          localStorage.getItem('openai_api_key') || '',
   dangerouslyAllowBrowser: true // Needed for client-side usage
 });
+
+// Log status of API key (without exposing the actual key)
+console.log("OpenAI API key status:", openai.apiKey ? "Available" : "Not set");
 
 /**
  * Initialize the OpenAI client with a provided API key
@@ -32,19 +37,42 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
     throw new Error('OpenAI API key not provided. Please set an API key first.');
   }
 
-  // Create a form data object to send the audio file
-  const formData = new FormData();
-  formData.append('file', audioBlob, 'recording.webm');
-  formData.append('model', 'whisper-1');
-
   try {
-    // Use the OpenAI client to transcribe the audio
-    const response = await openai.audio.transcriptions.create({
-      file: audioBlob as any, // Type casting needed due to browser Blob vs Node.js File differences
-      model: 'whisper-1',
+    // Option 1: Use fetch API directly for more control
+    const formData = new FormData();
+    
+    // Create a file from the blob with an appropriate extension
+    // OpenAI requires specific file types like mp3, mp4, mpeg, mpga, m4a, wav, or webm
+    const fileExtension = audioBlob.type.includes('mp3') ? 'mp3' : 
+                         audioBlob.type.includes('webm') ? 'webm' : 'wav';
+    
+    // Create a File object from the Blob
+    const audioFile = new File([audioBlob], `recording.${fileExtension}`, { 
+      type: audioBlob.type,
+      lastModified: Date.now()
     });
-
-    return response.text;
+    
+    console.log(`Audio file created: ${audioFile.name}, type: ${audioFile.type}, size: ${audioFile.size} bytes`);
+    formData.append('file', audioFile);
+    formData.append('model', 'whisper-1');
+    
+    // Make the API call directly with fetch
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openai.apiKey}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const result = await response.json();
+    return result.text;
   } catch (error) {
     console.error('Error transcribing audio:', error);
     throw error;
