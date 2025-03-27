@@ -1,15 +1,25 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { formDataSchema } from "@shared/schema";
 import { z } from "zod";
+import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
   await storage.initializeFormData();
 
+  // Define auth middleware for protected routes
+  const requireAuth = ClerkExpressRequireAuth();
+
+  // Public health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
+  // Protected routes
   // Get form data
-  app.get("/api/form-data", async (req, res) => {
+  app.get("/api/form-data", requireAuth, async (req, res) => {
     try {
       const formData = await storage.getFormData();
       res.json(formData);
@@ -20,7 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update form data (partial update)
-  app.patch("/api/form-data", async (req, res) => {
+  app.patch("/api/form-data", requireAuth, async (req, res) => {
     try {
       // Validate the fields being updated
       const updates = req.body;

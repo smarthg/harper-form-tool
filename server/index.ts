@@ -1,6 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { Clerk } from '@clerk/clerk-sdk-node';
+
+// Initialize Clerk with your API key
+const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
+
+// Set up Vite environment variables
+process.env.VITE_CLERK_PUBLISHABLE_KEY = process.env.CLERK_PUBLISHABLE_KEY;
 
 const app = express();
 app.use(express.json());
