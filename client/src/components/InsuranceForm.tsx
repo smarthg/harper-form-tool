@@ -15,17 +15,25 @@ const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormP
   const handleValueChange = async (field: string, value: any) => {
     try {
       // Update the form data on the server
-      const response = await fetch(`/api/form-data/${activeFormType}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
+      // Use a minimal timeout to avoid throttling too many requests
+      // while still keeping the server data updated
+      setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/form-data/${activeFormType}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ [field]: value }),
+          });
 
-      if (!response.ok) {
-        throw new Error('Failed to update form data');
-      }
+          if (!response.ok) {
+            throw new Error('Failed to update form data');
+          }
+        } catch (innerError) {
+          console.error('Error in delayed update:', innerError);
+        }
+      }, 100);
     } catch (error) {
       console.error('Error updating form field:', error);
     }

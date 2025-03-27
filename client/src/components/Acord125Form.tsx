@@ -30,7 +30,33 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   const { data: formData, isLoading: isDataLoading, error: dataError } = useQuery({
     queryKey: ['/api/form-data/acord125'],
     queryFn: () => apiRequest<Record<string, any>>('/api/form-data/acord125'),
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true,
   });
+
+  // Local state to optimize form rendering
+  const [localFormData, setLocalFormData] = useState<Record<string, any>>({});
+  
+  // Sync with server data when available
+  useEffect(() => {
+    if (formData) {
+      setLocalFormData(formData);
+    }
+  }, [formData]);
+
+  // Optimistic updates for form fields
+  const handleValueChange = (field: string, value: any) => {
+    // Update local state immediately
+    setLocalFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Call the original onValueChange handler to update server
+    if (onValueChange) {
+      onValueChange(field, value);
+    }
+  };
 
   const isLoading = isDefinitionLoading || isDataLoading;
   const error = definitionError || dataError;
@@ -68,11 +94,11 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   return (
     <DynamicForm
       formDefinition={formDefinition}
-      formData={formData}
+      formData={localFormData}
       highlightedField={highlightedField}
       isPending={isPending}
       readonly={readonly}
-      onValueChange={onValueChange}
+      onValueChange={handleValueChange}
       className="max-w-5xl mx-auto"
     />
   );
