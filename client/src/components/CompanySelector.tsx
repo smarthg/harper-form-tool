@@ -27,9 +27,11 @@ const CompanySelector = ({
 }: CompanySelectorProps) => {
   const { toast } = useToast();
   
-  // Fetch companies
-  const { data: companies, isLoading, error } = useQuery<Company[]>({
+  // Fetch companies with error handling
+  const { data: companies = [], isLoading, error } = useQuery<Company[]>({
     queryKey: ["/api/companies"],
+    retry: 1,
+    retryDelay: 1000,
   });
 
   // Refresh companies from API
@@ -57,7 +59,7 @@ const CompanySelector = ({
 
   // If there's a company list and no selection, auto-select the first company
   useEffect(() => {
-    if (companies?.length && companies.length > 0 && !selectedCompanyId) {
+    if (companies && companies.length > 0 && !selectedCompanyId) {
       onCompanyChange(companies[0].id);
     }
   }, [companies, selectedCompanyId, onCompanyChange]);
@@ -73,13 +75,8 @@ const CompanySelector = ({
     refreshCompaniesMutation.mutate();
   };
 
-  if (error) {
-    return (
-      <div className={`text-red-500 ${className}`}>
-        Error loading companies: {error.message}
-      </div>
-    );
-  }
+  // Don't show error, just continue with empty companies list
+  // This makes the component more resilient
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

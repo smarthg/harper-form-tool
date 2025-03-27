@@ -75,6 +75,12 @@ export class MemStorage implements IStorage {
     this.currentId = 1;
     this.currentCompanyId = 1;
     this.formData = { ...defaultFormData };
+    
+    // Initialize with some sample companies
+    this.companies.set(1, { id: 1, name: "Acme Insurance", code: "ACME" });
+    this.companies.set(2, { id: 2, name: "Global Coverage", code: "GLOBE" });
+    this.companies.set(3, { id: 3, name: "SafeGuard Ltd", code: "SAFE" });
+    this.currentCompanyId = 4;
   }
 
   async getUser(id: number): Promise<User | undefined> {
