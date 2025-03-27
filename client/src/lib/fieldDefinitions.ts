@@ -1,65 +1,62 @@
-// Field definitions for NLP recognition
 export const fieldDefinitions = [
-  { 
-    id: 'firstName', 
-    aliases: ['first name', 'firstname', 'given name'],
-    type: 'text'
+  {
+    id: "firstName",
+    displayName: "First Name",
+    aliases: ["first", "given name"]
   },
-  { 
-    id: 'lastName', 
-    aliases: ['last name', 'lastname', 'surname', 'family name'],
-    type: 'text'
+  {
+    id: "lastName",
+    displayName: "Last Name",
+    aliases: ["last", "surname", "family name"]
   },
-  { 
-    id: 'email', 
-    aliases: ['email', 'email address', 'e-mail'],
-    type: 'email'
+  {
+    id: "email",
+    displayName: "Email Address",
+    aliases: ["e-mail", "electronic mail", "mail"]
   },
-  { 
-    id: 'phone', 
-    aliases: ['phone', 'phone number', 'telephone', 'mobile', 'cell'],
-    type: 'tel'
+  {
+    id: "phone",
+    displayName: "Phone Number",
+    aliases: ["telephone", "cell", "mobile", "contact number"]
   },
-  { 
-    id: 'policyType', 
-    aliases: ['policy type', 'insurance type', 'type of policy', 'type of insurance'],
-    type: 'select',
-    options: ['home', 'auto', 'life', 'health']
+  {
+    id: "policyType",
+    displayName: "Policy Type",
+    aliases: ["insurance type", "policy kind", "insurance policy"]
   },
-  { 
-    id: 'policyNumber', 
-    aliases: ['policy number', 'policy #', 'policy id', 'policy identifier'],
-    type: 'text'
+  {
+    id: "policyNumber",
+    displayName: "Policy Number",
+    aliases: ["policy id", "insurance number", "policy identification"]
   },
-  { 
-    id: 'startDate', 
-    aliases: ['start date', 'starting date', 'policy start', 'effective date'],
-    type: 'date'
+  {
+    id: "startDate",
+    displayName: "Start Date",
+    aliases: ["beginning date", "effective date", "commencement date"]
   },
-  { 
-    id: 'endDate', 
-    aliases: ['end date', 'ending date', 'policy end', 'expiration date'],
-    type: 'date'
+  {
+    id: "endDate",
+    displayName: "End Date",
+    aliases: ["expiration date", "termination date", "expiry date"]
   },
-  { 
-    id: 'coverageAmount', 
-    aliases: ['coverage amount', 'coverage', 'coverage limit', 'coverage value'],
-    type: 'currency'
+  {
+    id: "coverageType",
+    displayName: "Coverage Type",
+    aliases: ["coverage kind", "protection type", "insurance coverage"]
   },
-  { 
-    id: 'deductible', 
-    aliases: ['deductible', 'deductible amount'],
-    type: 'currency'
+  {
+    id: "coverageAmount",
+    displayName: "Coverage Amount",
+    aliases: ["coverage limit", "policy limit", "insurance amount", "sum insured"]
   },
-  { 
-    id: 'coverageType', 
-    aliases: ['coverage type', 'type of coverage'],
-    type: 'select',
-    options: ['comprehensive', 'collision', 'liability', 'uninsured']
+  {
+    id: "deductible",
+    displayName: "Deductible",
+    aliases: ["excess", "out-of-pocket", "insurance deductible"]
   },
-  { 
-    id: 'monthlyPremium', 
-    aliases: ['monthly premium', 'premium', 'monthly payment', 'payment'],
-    type: 'currency'
+  {
+    id: "monthlyPremium",
+    displayName: "Monthly Premium",
+    aliases: ["premium", "monthly payment", "insurance cost", "monthly cost"]
   }
 ];

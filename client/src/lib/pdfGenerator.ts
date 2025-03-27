@@ -1,7 +1,6 @@
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import { FormDataType } from '@shared/schema';
-import autoTable from 'jspdf-autotable';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { FormDataType } from "@shared/schema";
 
 /**
  * Generate a PDF document from insurance form data
@@ -9,32 +8,29 @@ import autoTable from 'jspdf-autotable';
 export function generateInsurancePDF(formData: FormDataType): jsPDF {
   const doc = new jsPDF();
   
-  // Add document title
+  // Add header and title
   doc.setFontSize(20);
   doc.setTextColor(40, 40, 40);
-  doc.text('Insurance Policy Details', 105, 20, { align: 'center' });
+  doc.text("Insurance Policy Document", 105, 20, { align: "center" });
   
   doc.setFontSize(12);
-  doc.setTextColor(80, 80, 80);
-  doc.text('Generated on: ' + new Date().toLocaleDateString(), 105, 30, { align: 'center' });
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Policy #: ${formData.policyNumber}`, 105, 30, { align: "center" });
   
-  // Add document sections
+  // Add sections
   addPersonalInformationSection(doc, formData);
   addPolicyDetailsSection(doc, formData);
   addCoverageDetailsSection(doc, formData);
   
   // Add footer
   const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
+  doc.setFontSize(10);
+  doc.setTextColor(150, 150, 150);
+  
+  for(let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(10);
-    doc.setTextColor(150, 150, 150);
-    doc.text(
-      'Page ' + i + ' of ' + pageCount,
-      doc.internal.pageSize.getWidth() / 2,
-      doc.internal.pageSize.getHeight() - 10,
-      { align: 'center' }
-    );
+    doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: "center" });
+    doc.text("Generated on " + new Date().toLocaleDateString(), 105, 290, { align: "center" });
   }
   
   return doc;
@@ -44,35 +40,24 @@ export function generateInsurancePDF(formData: FormDataType): jsPDF {
  * Add the personal information section to the PDF
  */
 function addPersonalInformationSection(doc: jsPDF, formData: FormDataType) {
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setTextColor(60, 60, 60);
-  doc.text('Personal Information', 14, 45);
+  doc.text("Personal Information", 20, 50);
   
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, 47, 196, 47);
+  const personalData = [
+    ["Full Name", `${formData.firstName} ${formData.lastName}`],
+    ["Email Address", formData.email],
+    ["Phone Number", formData.phone]
+  ];
   
-  // Create data table
   autoTable(doc, {
-    startY: 50,
-    head: [['Field', 'Value']],
-    body: [
-      ['First Name', formData.firstName],
-      ['Last Name', formData.lastName],
-      ['Email Address', formData.email],
-      ['Phone Number', formData.phone]
-    ],
-    theme: 'grid',
+    startY: 55,
+    head: [["Field", "Information"]],
+    body: personalData,
+    theme: "grid",
     headStyles: {
-      fillColor: [66, 133, 244],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold'
-    },
-    styles: {
-      fontSize: 10,
-      cellPadding: 5
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 50 }
+      fillColor: [100, 100, 100],
+      textColor: [255, 255, 255]
     }
   });
 }
@@ -81,46 +66,27 @@ function addPersonalInformationSection(doc: jsPDF, formData: FormDataType) {
  * Add the policy details section to the PDF
  */
 function addPolicyDetailsSection(doc: jsPDF, formData: FormDataType) {
-  // Get the last Y position from the previous table
-  const previousTableEndY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
   
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setTextColor(60, 60, 60);
-  doc.text('Policy Details', 14, previousTableEndY);
+  doc.text("Policy Details", 20, finalY);
   
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, previousTableEndY + 2, 196, previousTableEndY + 2);
+  const policyData = [
+    ["Policy Type", formData.policyType],
+    ["Policy Number", formData.policyNumber],
+    ["Start Date", formatDate(formData.startDate)],
+    ["End Date", formatDate(formData.endDate)]
+  ];
   
-  // Format policy type display name
-  const policyTypeMap: Record<string, string> = {
-    'home': 'Home Insurance',
-    'auto': 'Auto Insurance',
-    'life': 'Life Insurance',
-    'health': 'Health Insurance'
-  };
-  
-  // Create data table
   autoTable(doc, {
-    startY: previousTableEndY + 5,
-    head: [['Field', 'Value']],
-    body: [
-      ['Policy Type', policyTypeMap[formData.policyType] || formData.policyType],
-      ['Policy Number', formData.policyNumber],
-      ['Start Date', formatDate(formData.startDate)],
-      ['End Date', formatDate(formData.endDate)]
-    ],
-    theme: 'grid',
+    startY: finalY + 5,
+    head: [["Field", "Information"]],
+    body: policyData,
+    theme: "grid",
     headStyles: {
-      fillColor: [66, 133, 244],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold'
-    },
-    styles: {
-      fontSize: 10,
-      cellPadding: 5
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 50 }
+      fillColor: [100, 100, 100],
+      textColor: [255, 255, 255]
     }
   });
 }
@@ -129,46 +95,27 @@ function addPolicyDetailsSection(doc: jsPDF, formData: FormDataType) {
  * Add the coverage details section to the PDF
  */
 function addCoverageDetailsSection(doc: jsPDF, formData: FormDataType) {
-  // Get the last Y position from the previous table
-  const previousTableEndY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
   
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setTextColor(60, 60, 60);
-  doc.text('Coverage Details', 14, previousTableEndY);
+  doc.text("Coverage Details", 20, finalY);
   
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, previousTableEndY + 2, 196, previousTableEndY + 2);
+  const coverageData = [
+    ["Coverage Type", formData.coverageType],
+    ["Coverage Amount", formData.coverageAmount],
+    ["Deductible", formData.deductible],
+    ["Monthly Premium", formData.monthlyPremium]
+  ];
   
-  // Format coverage type display name
-  const coverageTypeMap: Record<string, string> = {
-    'comprehensive': 'Comprehensive',
-    'collision': 'Collision',
-    'liability': 'Liability',
-    'uninsured': 'Uninsured Motorist'
-  };
-  
-  // Create data table
   autoTable(doc, {
-    startY: previousTableEndY + 5,
-    head: [['Field', 'Value']],
-    body: [
-      ['Coverage Amount', `$${formData.coverageAmount}`],
-      ['Deductible', `$${formData.deductible}`],
-      ['Coverage Type', coverageTypeMap[formData.coverageType] || formData.coverageType],
-      ['Monthly Premium', `$${formData.monthlyPremium}`]
-    ],
-    theme: 'grid',
+    startY: finalY + 5,
+    head: [["Field", "Information"]],
+    body: coverageData,
+    theme: "grid",
     headStyles: {
-      fillColor: [66, 133, 244],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold'
-    },
-    styles: {
-      fontSize: 10,
-      cellPadding: 5
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 50 }
+      fillColor: [100, 100, 100],
+      textColor: [255, 255, 255]
     }
   });
 }
@@ -177,15 +124,11 @@ function addCoverageDetailsSection(doc: jsPDF, formData: FormDataType) {
  * Helper to format dates for display
  */
 function formatDate(dateString: string): string {
-  if (!dateString) return '';
+  if (!dateString) return "N/A";
   
   try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString();
   } catch (e) {
     return dateString;
   }
