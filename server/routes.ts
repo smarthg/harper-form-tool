@@ -10,8 +10,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
   await storage.initializeFormData();
 
+  // Check if developer mode is enabled
+  const isDeveloperMode = process.env.DEVELOPER_MODE === 'true';
+  console.log(`Developer mode: ${isDeveloperMode ? 'enabled' : 'disabled'}`);
+
   // Define auth middleware for protected routes
-  const requireAuth = ClerkExpressRequireAuth();
+  // In developer mode, use a pass-through middleware
+  const requireAuth = isDeveloperMode 
+    ? (req: Request, res: Response, next: NextFunction) => next() 
+    : ClerkExpressRequireAuth();
   
   // Configure multer for file uploads
   const upload = multer({
@@ -30,7 +37,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Public health check endpoint
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ 
+      status: "ok",
+      developerMode: process.env.DEVELOPER_MODE === 'true'
+    });
   });
   
   // Get all companies

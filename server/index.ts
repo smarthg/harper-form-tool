@@ -2,6 +2,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { Clerk } from '@clerk/clerk-sdk-node';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Initialize Clerk with your API key
 const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
