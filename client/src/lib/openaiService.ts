@@ -98,6 +98,7 @@ export async function processCommandWithAI(text: string): Promise<{ field: strin
           content: `You are a helpful assistant that extracts intent from user commands for an ACORD 125 Commercial Insurance Application.
           
           The form has the following fields:
+          # ACORD 125 Commercial Insurance Form Fields
           - namedInsured: The name of the insured company
           - businessPhone: Business phone number
           - email: Email address
@@ -115,6 +116,24 @@ export async function processCommandWithAI(text: string): Promise<{ field: strin
           - numEmployees: Number of employees
           - deductible: Insurance deductible amount
           - coverageAmount: Insurance coverage amount
+          - naics: North American Industry Classification System code
+          - sic: Standard Industrial Classification code
+          - agency: Agency name
+          - contactName: Agency contact person name
+          - phone: Agency phone number
+          - proposedEffDate: Proposed effective date of the policy
+          - proposedExpDate: Proposed expiration date of the policy
+          
+          # Additional Form Fields
+          - firstName: First name (personal info)
+          - lastName: Last name (personal info) 
+          - phone: Phone number
+          - policyType: Type of policy (home, auto, life, health)
+          - policyNumber: Policy identifier
+          - startDate: Policy start date
+          - endDate: Policy end date
+          - coverageType: Type of coverage (comprehensive, collision, liability, uninsured)
+          - monthlyPremium: Monthly payment amount
           
           Examples:
           - "Change the deductible to $2,000" → { "field": "deductible", "value": "2000" }
@@ -123,10 +142,15 @@ export async function processCommandWithAI(text: string): Promise<{ field: strin
           - "Change the business type to LLC" → { "field": "businessType", "value": "LLC" }
           - "Update the mailing address to 123 Main St" → { "field": "mailingAddress", "value": "123 Main St" }
           - "Set the business phone to 555-123-4567" → { "field": "businessPhone", "value": "555-123-4567" }
+          - "Set policy type to auto" → { "field": "policyType", "value": "auto" }
+          - "Change coverage type to comprehensive" → { "field": "coverageType", "value": "comprehensive" }
+          - "Set monthly premium to $150" → { "field": "monthlyPremium", "value": "150" }
           
           Return a JSON object with the field and value, or null if you can't determine them.
           Remove currency symbols from monetary values.
-          For businessType, normalize to: Corporation, LLC, Partnership, Individual, Joint Venture, Other.`
+          For businessType, normalize to: Corporation, LLC, Partnership, Individual, Joint Venture, Other.
+          For policyType, normalize to: home, auto, life, health.
+          For coverageType, normalize to: comprehensive, collision, liability, uninsured.`
         },
         {
           role: 'user',
