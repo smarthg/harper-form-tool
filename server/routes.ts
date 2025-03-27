@@ -7,6 +7,7 @@ import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 import multer from 'multer';
 import { getFormDefinition, getFormData, updateFormData } from "./formData";
 import { mapCompanyDataToForm, initializeOpenAI } from "./services/formMappingService";
+import { fillPdf, storePdfTemporarily, initializeAnvil } from './services/anvilService';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default form data
@@ -330,6 +331,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error(`Error mapping company data to form:`, error);
       res.status(500).json({ 
         message: 'Failed to map company data to form fields',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Fill PDF with Anvil API
+  app.post('/api/fill-pdf', requireAuth, async (req, res) => {
+    try {
+      const { formData } = req.body;
+      
+      if (!formData || Object.keys(formData).length === 0) {
+        return res.status(400).json({ message: 'No form data provided' });
+      }
+      
+      // Check if Anvil API key is configured
+      if (process.env.ANVIL_API_KEY) {
+        initializeAnvil(process.env.ANVIL_API_KEY);
+      } else {
+        return res.status(400).json({ 
+          message: 'Anvil API key not configured. Please add ANVIL_API_KEY to environment variables.' 
+        });
+      }
+      
+      // Fill the PDF form with Anvil
+      const filledPdf = await fillPdf(formData);
+      
+      // Store the filled PDF temporarily
+      const pdfUrl = storePdfTemporarily(filledPdf);
+      
+      // Return the URL to the filled PDF
+      res.json({
+        message: 'PDF filled successfully',
+        pdfUrl
+      });
+    } catch (error) {
+      console.error('Error filling PDF with Anvil:', error);
+      res.status(500).json({ 
+        message: 'Failed to fill PDF',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import DynamicForm from './DynamicForm';
 import { FormDefinition } from '@shared/formTypes/acord125';
 import { apiRequest } from '@/lib/queryClient';
+import AnvilPdfButton from './AnvilPdfButton';
+import { FormDataType } from '@shared/schema';
 
 interface Acord125FormProps {
   highlightedField?: string | null;
@@ -29,13 +31,26 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   // Fetch the form data
   const { data: formData, isLoading: isDataLoading, error: dataError } = useQuery({
     queryKey: ['/api/form-data/acord125'],
-    queryFn: () => apiRequest<Record<string, any>>('/api/form-data/acord125'),
+    queryFn: () => apiRequest<FormDataType>('/api/form-data/acord125'),
     staleTime: 0, // Always fetch fresh data
     refetchOnWindowFocus: true,
   });
 
   // Local state to optimize form rendering
-  const [localFormData, setLocalFormData] = useState<Record<string, any>>({});
+  const [localFormData, setLocalFormData] = useState<FormDataType>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    policyType: '',
+    policyNumber: '',
+    startDate: '',
+    endDate: '',
+    coverageAmount: '',
+    deductible: '',
+    coverageType: '',
+    monthlyPremium: ''
+  });
   
   // Sync with server data when available
   useEffect(() => {
@@ -47,7 +62,7 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   // Optimistic updates for form fields
   const handleValueChange = (field: string, value: any) => {
     // Update local state immediately
-    setLocalFormData(prev => ({
+    setLocalFormData((prev: FormDataType) => ({
       ...prev,
       [field]: value
     }));
@@ -92,15 +107,21 @@ const Acord125Form: React.FC<Acord125FormProps> = ({
   }
 
   return (
-    <DynamicForm
-      formDefinition={formDefinition}
-      formData={localFormData}
-      highlightedField={highlightedField}
-      isPending={isPending}
-      readonly={readonly}
-      onValueChange={handleValueChange}
-      className="max-w-5xl mx-auto"
-    />
+    <div className="space-y-4 max-w-5xl mx-auto">
+      <div className="flex justify-end mb-4">
+        <AnvilPdfButton formData={localFormData} />
+      </div>
+      
+      <DynamicForm
+        formDefinition={formDefinition}
+        formData={localFormData}
+        highlightedField={highlightedField}
+        isPending={isPending}
+        readonly={readonly}
+        onValueChange={handleValueChange}
+        className="w-full"
+      />
+    </div>
   );
 };
 

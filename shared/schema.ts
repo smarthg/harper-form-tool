@@ -45,6 +45,7 @@ export const insertFormDataSchema = createInsertSchema(formData).omit({
 });
 
 export const formDataSchema = z.object({
+  // Basic form fields
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
@@ -58,6 +59,68 @@ export const formDataSchema = z.object({
   coverageType: z.string(),
   monthlyPremium: z.string(),
   companyId: z.number().optional(),
+  
+  // ACORD 125 specific fields
+  // Agency information
+  agency: z.string().optional(),
+  contactName: z.string().optional(),
+  fax: z.string().optional(),
+  agencyCode: z.string().optional(),
+  agencySubcode: z.string().optional(),
+  agencyCustomerId: z.string().optional(),
+  
+  // Carrier information
+  carrier: z.string().optional(),
+  naicCode: z.string().optional(),
+  
+  // Insured information
+  insuredCompanyName: z.string().optional(),
+  insuredAddress: z.string().optional(),
+  insuredCity: z.string().optional(),
+  insuredState: z.string().optional(),
+  insuredZip: z.string().optional(),
+  insuredFein: z.string().optional(),
+  insuredPhone: z.string().optional(),
+  insuredWebsite: z.string().optional(),
+  
+  // Business type
+  businessType: z.enum([
+    'corporation', 
+    'individual', 
+    'partnership', 
+    'jointVenture', 
+    'llc', 
+    'trust', 
+    'nonProfit', 
+    'subchapterSCorp'
+  ]).optional(),
+  
+  // Premises information
+  locationNumber: z.string().optional(),
+  locationStreet: z.string().optional(),
+  locationCity: z.string().optional(),
+  locationState: z.string().optional(),
+  locationCounty: z.string().optional(),
+  locationZip: z.string().optional(),
+  fullTimeEmployees: z.string().optional(),
+  partTimeEmployees: z.string().optional(),
+  annualRevenue: z.string().optional(),
+  occupiedArea: z.string().optional(),
+  totalBuildingArea: z.string().optional(),
+  
+  // Nature of business
+  businessNature: z.enum([
+    'apartments', 
+    'contractor', 
+    'manufacturing', 
+    'office', 
+    'retail', 
+    'wholesale'
+  ]).optional(),
+  businessStartDate: z.string().optional(),
+  
+  // Description of operations
+  operationsDescription: z.string().optional(),
 });
 
 export const companySchema = z.object({
