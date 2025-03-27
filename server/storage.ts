@@ -201,20 +201,27 @@ export class MemStorage implements IStorage {
   async getCompanyDetailedInfo(companyId: number): Promise<any> {
     try {
       console.log(`Fetching detailed info for company ID: ${companyId}`);
+      const payload = { company_id: companyId };
+      console.log('Request payload:', payload);
+      
       const response = await fetch('https://tatch.retool.com/url/company-memory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Workflow-Api-Key': 'retool_wk_399d5bbb7fa84a4887466b87856d51a8'
         },
-        body: JSON.stringify({ company_id: companyId })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
+        console.error(`API request failed with status ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Error response body: ${errorText}`);
         throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('API response data:', JSON.stringify(data).slice(0, 200) + '...');
       return data;
     } catch (error) {
       console.error(`Error fetching detailed info for company ID ${companyId}:`, error);

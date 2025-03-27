@@ -65,17 +65,143 @@ const FormEditor = () => {
     },
   });
 
-  // Handle company selection change
-  const handleCompanyChange = (companyId: number) => {
+  // Handle company selection change and fetch company details
+  const handleCompanyChange = async (companyId: number) => {
     setSelectedCompanyId(companyId);
     
-    // Update the form data with the selected company
-    updateFormMutation.mutate({ companyId });
-    
-    toast({
-      title: "Company selected",
-      description: "Form is now associated with the selected company.",
-    });
+    try {
+      // Update the form data with the selected company ID
+      await updateFormMutation.mutateAsync({ companyId });
+      
+      // Fetch detailed information about the company
+      console.log(`Fetching detailed info for company ID: ${companyId}`);
+      const companyDetails = await apiRequest<any>(`/api/companies/${companyId}/details`);
+      console.log("Company details response:", companyDetails);
+      
+      if (companyDetails?.company?.json?.company) {
+        const companyData = companyDetails.company.json.company;
+        
+        // Create updates based on company data
+        const formUpdates: Partial<FormDataType> = {};
+        
+        // Map company data to form fields
+        if (companyData.company_name) {
+          formUpdates.policyType = 'commercial'; // Assuming commercial policy for companies
+        }
+        
+        // Update any other relevant fields based on company data
+        if (companyData.company_primary_phone) {
+          formUpdates.phone = companyData.company_primary_phone;
+        }
+        
+        // Set a reasonable default coverage amount based on company type/size
+        // This is just an example - actual logic would depend on business rules
+        if (companyData.company_naics_code) {
+          // Different industries might have different standard coverage amounts
+          const industryCode = parseInt(companyData.company_naics_code);
+          
+          // Construction (23XXXX)
+          if (industryCode >= 230000 && industryCode < 240000) {
+            formUpdates.coverageAmount = '1,000,000';
+            formUpdates.deductible = '10,000';
+          } 
+          // Manufacturing (31XXXX-33XXXX)
+          else if (industryCode >= 310000 && industryCode < 340000) {
+            formUpdates.coverageAmount = '2,000,000';
+            formUpdates.deductible = '15,000';
+          }
+          // Retail (44XXXX-45XXXX)
+          else if (industryCode >= 440000 && industryCode < 460000) {
+            formUpdates.coverageAmount = '500,000';
+            formUpdates.deductible = '5,000';
+          }
+          // Default
+          else {
+            formUpdates.coverageAmount = '1,000,000';
+            formUpdates.deductible = '5,000';
+          }
+          
+          formUpdates.coverageType = 'comprehensive';
+          
+          // Calculate a monthly premium (again, just an example)
+          // In reality, this would be calculated by complex risk models
+          const coverageAmount = parseInt(formUpdates.coverageAmount.replace(/,/g, ''));
+          const deductible = parseInt(formUpdates.deductible.replace(/,/g, ''));
+          const premiumBase = Math.round((coverageAmount * 0.01 - deductible * 0.05) / 12);
+          formUpdates.monthlyPremium = premiumBase.toString();
+        }
+        
+        // Only update if we have data to update
+        if (Object.keys(formUpdates).length > 0) {
+          await updateFormMutation.mutateAsync(formUpdates);
+          
+          // Also update the ACORD 125 form data
+          try {
+            // Create ACORD 125 specific updates
+            const acord125Updates: Record<string, any> = {
+              namedInsured: companyData.company_name || "",
+              businessPhone: companyData.company_primary_phone || "",
+              naics: companyData.company_naics_code || "",
+              sic: companyData.company_sic_code || ""
+            };
+            
+            // Set business type based on name (just an example)
+            if (companyData.company_name) {
+              if (companyData.company_name.includes("Inc")) {
+                acord125Updates.businessType = "corporation";
+              } else if (companyData.company_name.includes("LLC")) {
+                acord125Updates.businessType = "limited_liability_company";
+              } else if (companyData.company_name.includes("LLP")) {
+                acord125Updates.businessType = "limited_liability_partnership";
+              } else {
+                acord125Updates.businessType = "sole_proprietor";
+              }
+            }
+            
+            // Set default dates
+            const today = new Date();
+            const nextYear = new Date(today);
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            
+            acord125Updates.proposedEffDate = today.toISOString().split('T')[0];
+            acord125Updates.proposedExpDate = nextYear.toISOString().split('T')[0];
+            
+            // Update ACORD 125 form data
+            await apiRequest("/api/form-data/acord125", {
+              method: "PATCH",
+              body: JSON.stringify(acord125Updates),
+              headers: {
+                "Content-Type": "application/json"
+              }
+            });
+          } catch (error) {
+            console.error("Error updating ACORD 125 form data:", error);
+          }
+          
+          toast({
+            title: "Company data applied",
+            description: "Forms have been updated with company information.",
+          });
+        } else {
+          toast({
+            title: "Company selected",
+            description: "Form is now associated with the selected company.",
+          });
+        }
+      } else {
+        toast({
+          title: "Company selected",
+          description: "Form is now associated with the selected company.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching company details:", error);
+      toast({
+        title: "Company selected",
+        description: "Form is now associated with the selected company.",
+        variant: "default",
+      });
+    }
   };
 
   const handleFieldUpdate = async (
@@ -189,12 +315,7 @@ const FormEditor = () => {
         </div>
       </header>
 
-      {/* Company Details Section */}
-      {selectedCompanyId && (
-        <div className="mb-6">
-          <CompanyDetails companyId={selectedCompanyId} />
-        </div>
-      )}
+      {/* We're fetching company details but not displaying them directly */}
 
       <div className="lg:flex gap-6">
         <div className="lg:w-2/3">
