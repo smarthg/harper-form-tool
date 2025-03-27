@@ -18,7 +18,12 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
     try {
       setIsLoading(true);
       
-      // Use Anvil to fill the PDF
+      // Validate essential form data
+      if (!formData.firstName || !formData.lastName) {
+        throw new Error('Applicant name information is required');
+      }
+      
+      // Use Anvil to fill the PDF with the updated mapping structure
       const pdfUrl = await fillPdfWithAnvil(formData);
       
       // Open the PDF in a new tab
@@ -42,12 +47,16 @@ const AnvilPdfButton = ({ formData, className = '' }: AnvilPdfButtonProps) => {
     }
   };
 
+  // Determine if the button should be disabled
+  const shouldDisable = isLoading || !formData.firstName || !formData.lastName;
+
   return (
     <Button
       onClick={handleFillPdf}
       className={`${className} gap-2`}
-      disabled={isLoading}
+      disabled={shouldDisable}
       variant="default"
+      title={shouldDisable && !isLoading ? "Please complete required fields first" : "Generate ACORD 125 PDF"}
     >
       {isLoading ? (
         <Loader2Icon className="h-4 w-4 animate-spin" />

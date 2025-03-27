@@ -9,74 +9,127 @@ type Acord125FormData = FormDataType;
  * Returns the properly formatted data for Anvil's fillPDF endpoint
  */
 export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<string, any> {
-  // Map the form data to the specific field names in the ACORD 125 PDF
+  // Map the form data to the structure expected by Anvil
   return {
-    // Date at the top right
-    'DATE (MM/DD/YYYY)': new Date().toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric'
-    }),
+    // Transaction Information
+    transactionStatus: "Quote", // Default to Quote
+    transactionType: "New", // Default to New
+    timeOfDay: "AM",
+    proposedEffectiveDate: formData.startDate || new Date().toISOString().split('T')[0],
+    proposedExpirationDate: formData.endDate || new Date().toISOString().split('T')[0],
     
-    // Agency information
-    'AGENCY': formData.agency || '',
-    'CONTACT NAME:': formData.contactName || '',
-    'PHONE (A/C, No, Ext):': formData.phone || '',
-    'FAX (A/C, No):': formData.fax || '',
-    'E-MAIL ADDRESS:': formData.email || '',
-    'CODE:': formData.agencyCode || '',
-    'SUBCODE:': formData.agencySubcode || '',
-    'AGENCY CUSTOMER ID:': formData.agencyCustomerId || '',
+    // Basic form information
+    date: new Date().toISOString().split('T')[0],
     
-    // Policy information
-    'CARRIER': formData.carrier || '',
-    'NAIC CODE': formData.naicCode || '',
-    'POLICY NUMBER': formData.policyNumber || '',
+    // Agency Information
+    agency: formData.agency || '',
+    carrier: formData.carrier || '',
+    naicCode: formData.naicCode || '',
+    companyPolicyOrProgramName: '', // No direct mapping
+    programCode: '', // No direct mapping
+    policyNumber: formData.policyNumber || '',
+    underwriter: '', // No direct mapping
+    underwriterOffice: '', // No direct mapping
+    agencyCustomerId: formData.agencyCustomerId || '',
     
-    // Company information - First Named Insured
-    'NAME (First Named Insured) AND MAILING ADDRESS (including ZIP+4)': 
-      `${formData.insuredCompanyName || ''}\n${formData.insuredAddress || ''}\n${formData.insuredCity || ''}, ${formData.insuredState || ''} ${formData.insuredZip || ''}`,
-    'FEIN OR SOC SEC #': formData.insuredFein || '',
-    'BUSINESS PHONE #:': formData.insuredPhone || '',
-    'WEBSITE ADDRESS': formData.insuredWebsite || '',
+    // Applicant Information
+    applicantName: {
+      firstName: formData.firstName || '',
+      mi: '', // Middle initial not in our form data
+      lastName: formData.lastName || ''
+    },
+    applicantBusinessType: convertBusinessType(formData.businessType),
+    mailingAddress: {
+      street1: formData.insuredAddress || '',
+      street2: '', // We don't have street2 in our form
+      city: formData.insuredCity || '',
+      state: formData.insuredState || '',
+      zip: formData.insuredZip || '',
+      country: 'US' // Default to US
+    },
+    glCode: '', // No direct mapping
+    sic: '', // No direct mapping
+    naics: '', // No direct mapping
+    feinOrSocSec: formData.insuredFein || '',
+    businessPhone: {
+      num: formData.insuredPhone || formData.phone || '',
+      region: 'US',
+      baseRegion: 'US'
+    },
+    websiteAddress: formData.insuredWebsite || '',
     
-    // Business Type - check the appropriate box
-    'CORPORATION': formData.businessType === 'corporation' ? 'Yes' : 'No',
-    'INDIVIDUAL': formData.businessType === 'individual' ? 'Yes' : 'No',
-    'PARTNERSHIP': formData.businessType === 'partnership' ? 'Yes' : 'No',
-    'JOINT VENTURE': formData.businessType === 'jointVenture' ? 'Yes' : 'No',
-    'LLC': formData.businessType === 'llc' ? 'Yes' : 'No',
-    'TRUST': formData.businessType === 'trust' ? 'Yes' : 'No',
-    'NOT FOR PROFIT ORG': formData.businessType === 'nonProfit' ? 'Yes' : 'No',
-    'SUBCHAPTER "S" CORPORATION': formData.businessType === 'subchapterSCorp' ? 'Yes' : 'No',
+    // Premises Information - using location fields
+    premisesInformation1: {
+      street1: formData.locationStreet || '',
+      street2: '', // No street2 in our form
+      city: formData.locationCity || '',
+      state: formData.locationState || '',
+      zip: formData.locationZip || '',
+      country: 'US' // Default to US
+    },
     
-    // Premises information
-    'LOC #': formData.locationNumber || '',
-    'STREET': formData.locationStreet || '',
-    'CITY:': formData.locationCity || '',
-    'STATE:': formData.locationState || '',
-    'COUNTY:': formData.locationCounty || '',
-    'ZIP:': formData.locationZip || '',
-    '# FULL TIME EMPL': formData.fullTimeEmployees || '',
-    '# PART TIME EMPL': formData.partTimeEmployees || '',
-    'ANNUAL REVENUES: $': formData.annualRevenue || '',
-    'OCCUPIED AREA:': formData.occupiedArea || '',
-    'TOTAL BUILDING AREA:': formData.totalBuildingArea || '',
-    
-    // Nature of business
-    'APARTMENTS': formData.businessNature === 'apartments' ? 'Yes' : 'No',
-    'CONTRACTOR': formData.businessNature === 'contractor' ? 'Yes' : 'No',
-    'MANUFACTURING': formData.businessNature === 'manufacturing' ? 'Yes' : 'No',
-    'OFFICE': formData.businessNature === 'office' ? 'Yes' : 'No',
-    'RETAIL': formData.businessNature === 'retail' ? 'Yes' : 'No',
-    'WHOLESALE': formData.businessNature === 'wholesale' ? 'Yes' : 'No',
-    'DATE BUSINESS STARTED (MM/DD/YYYY)': formData.businessStartDate || '',
+    // Business Information
+    natureOfBusiness: mapBusinessNature(formData.businessNature),
+    fullTimeEmployees: parseInt(formData.fullTimeEmployees || '0'),
+    partTimeEmployees: parseInt(formData.partTimeEmployees || '0'),
+    annualRevenues: parseFloat(formData.annualRevenue || '0'),
     
     // Description of operations
-    'DESCRIPTION OF PRIMARY OPERATIONS': formData.operationsDescription || '',
+    descriptionOfPrimaryOperations: formData.operationsDescription || '',
     
-    // Additional fields can be added as needed
+    // Add policy limits information
+    policyPremium: formData.monthlyPremium ? parseFloat(formData.monthlyPremium) * 12 : 0,
+    coverageAmount: formData.coverageAmount || '',
+    deductible: formData.deductible || '',
+    
+    // Add conditional business type flags based on businessType
+    corporation: formData.businessType === 'corporation',
+    individual: formData.businessType === 'individual',
+    partnership: formData.businessType === 'partnership',
+    jointVenture: formData.businessType === 'jointVenture',
+    llc: formData.businessType === 'llc',
+    trust: formData.businessType === 'trust',
+    notForProfitOrg: formData.businessType === 'nonProfit',
+    subchapterSCorporation: formData.businessType === 'subchapterSCorp',
   };
+}
+
+/**
+ * Helper function to convert internal business type to Anvil format
+ */
+function convertBusinessType(businessType?: string): string {
+  if (!businessType) return 'Corporation';
+  
+  const typeMap: Record<string, string> = {
+    'corporation': 'Corporation',
+    'individual': 'Individual',
+    'partnership': 'Partnership',
+    'jointVenture': 'Joint Venture',
+    'llc': 'LLC',
+    'trust': 'Trust',
+    'nonProfit': 'Not For Profit Org',
+    'subchapterSCorp': 'Subchapter "S" Corporation'
+  };
+  
+  return typeMap[businessType] || 'Corporation';
+}
+
+/**
+ * Helper function to map business nature to Anvil format
+ */
+function mapBusinessNature(businessNature?: string): string {
+  if (!businessNature) return '';
+  
+  const natureMap: Record<string, string> = {
+    'apartments': 'Apartments',
+    'contractor': 'Contractor',
+    'manufacturing': 'Manufacturing',
+    'office': 'Office',
+    'retail': 'Retail',
+    'wholesale': 'Wholesale'
+  };
+  
+  return natureMap[businessNature] || '';
 }
 
 /**

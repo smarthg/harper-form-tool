@@ -345,6 +345,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No form data provided' });
       }
       
+      // Verify required fields for the ACORD 125 form
+      if (!formData.applicantName?.firstName || !formData.applicantName?.lastName) {
+        return res.status(400).json({ message: 'Applicant name is required' });
+      }
+      
       // Check if Anvil API key is configured
       if (process.env.ANVIL_API_KEY) {
         initializeAnvil(process.env.ANVIL_API_KEY);
@@ -355,6 +360,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fill the PDF form with Anvil
+      // The data is already in the expected format from the client
+      console.log('Received data structure for Anvil PDF filling:', Object.keys(formData));
+      
       const filledPdf = await fillPdf(formData);
       
       // Store the filled PDF temporarily

@@ -165,50 +165,100 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
  * @returns Data formatted for Anvil PDF filling
  */
 function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
-  // Create a mapping of our form fields to Anvil fields
-  // This will depend on the field names in the PDF form
+  // The Anvil template expects data in a specific format based on the ACORD 125 form
+  // This function will map our form data to match Anvil's expected structure
   
-  // For ACORD 125 form, convert our field names to match Anvil's expected field names
-  // We're using lowercase field names as per Anvil documentation
-  const mapping: Record<string, string> = {
+  // Create an object that matches the structure expected by Anvil
+  const mappedData: Record<string, any> = {
+    // Transaction Information
+    transactionStatus: data.transactionStatus || "Quote",
+    transactionType: data.transactionType || "New",
+    timeOfDay: data.timeOfDay || "AM",
+    proposedEffectiveDate: data.proposedEffectiveDate || new Date().toISOString().split('T')[0],
+    proposedExpirationDate: data.proposedExpirationDate || new Date().toISOString().split('T')[0],
+    
+    // Form Basic Information
+    date: new Date().toISOString().split('T')[0],
+    agency: data.agency || "",
+    carrier: data.carrier || "",
+    naicCode: data.naicCode || "",
+    companyPolicyOrProgramName: data.companyPolicyOrProgramName || "",
+    programCode: data.programCode || "",
+    policyNumber: data.policyNumber || "",
+    underwriter: data.underwriter || "",
+    underwriterOffice: data.underwriterOffice || "",
+    agencyCustomerId: data.agencyCustomerId || "",
+    
     // Applicant Information
-    'namedInsured': 'named_insured',
-    'dba': 'dba',
-    'mailingAddress': 'mailing_address',
-    'mailingCity': 'mailing_city',
-    'mailingState': 'mailing_state',
-    'mailingZipCode': 'mailing_zip',
-    'email': 'email',
-    'businessPhone': 'phone',
-    'websiteAddress': 'website',
-    'feinOrSocSec': 'fein',
+    applicantName: {
+      firstName: data.firstName || "",
+      mi: data.middleInitial || "",
+      lastName: data.lastName || ""
+    },
+    applicantBusinessType: data.businessType || "Corporation",
+    mailingAddress: {
+      street1: data.mailingStreet1 || "",
+      street2: data.mailingStreet2 || "",
+      city: data.mailingCity || "",
+      state: data.mailingState || "",
+      zip: data.mailingZip || "",
+      country: data.mailingCountry || "US"
+    },
+    glCode: data.glCode || "",
+    sic: data.sic || "",
+    naics: data.naics || "",
+    feinOrSocSec: data.feinOrSocSec || "",
+    businessPhone: {
+      num: data.businessPhone || "",
+      region: "US",
+      baseRegion: "US"
+    },
+    websiteAddress: data.websiteAddress || "",
     
-    // Business Information
-    'natureOfBusiness': 'nature_of_business',
-    'descriptionOfPrimaryOperations': 'description_operations',
-    'businessType': 'business_type',
-    'naics': 'naics_code',
-    'sic': 'sic_code',
-
-    // Agency Information
-    'agency': 'agency_name',
-    'contactName': 'agency_contact',
-    'phone': 'agency_phone',
-    'agencyCustomerID': 'agency_customer_id',
+    // Premises Information
+    premisesInformation1: data.premisesInformation1 ? data.premisesInformation1 : {
+      street1: data.premisesStreet1 || "",
+      street2: data.premisesStreet2 || "",
+      city: data.premisesCity || "",
+      state: data.premisesState || "",
+      zip: data.premisesZip || "",
+      country: data.premisesCountry || "US"
+    },
     
-    // Additional fields can be added as needed
+    // Nature of Business
+    natureOfBusiness: data.natureOfBusiness || "",
+    descriptionOfPrimaryOperations: data.descriptionOfPrimaryOperations || "",
+    
+    // Business Info
+    fullTimeEmployees: data.fullTimeEmployees || 0,
+    partTimeEmployees: data.partTimeEmployees || 0,
+    annualRevenues: data.annualRevenues || 0,
   };
   
-  // Create a new object with the mapped fields
-  const mappedData: Record<string, any> = {};
+  // Add conditional business type flags
+  if (data.businessType) {
+    mappedData.corporation = data.businessType === "Corporation";
+    mappedData.individual = data.businessType === "Individual";
+    mappedData.partnership = data.businessType === "Partnership";
+    mappedData.jointVenture = data.businessType === "Joint Venture";
+    mappedData.llc = data.businessType === "LLC";
+    mappedData.notForProfitOrg = data.businessType === "Not For Profit Org";
+    mappedData.subchapterSCorporation = data.businessType === "Subchapter \"S\" Corporation";
+    mappedData.trust = data.businessType === "Trust";
+  }
   
-  // Copy data from our form to the mapped fields
-  for (const [ourField, anvilField] of Object.entries(mapping)) {
-    if (data[ourField] !== undefined) {
-      mappedData[anvilField] = data[ourField];
+  // Add premium information if provided
+  if (data.propertyPremium) mappedData.propertyPremium = data.propertyPremium;
+  if (data.commercialGeneralLiabilityPremium) mappedData.commercialGeneralLiabilityPremium = data.commercialGeneralLiabilityPremium;
+  if (data.businessAutoPremium) mappedData.businessAutoPremium = data.businessAutoPremium;
+  if (data.umbrellaPremium) mappedData.umbrellaPremium = data.umbrellaPremium;
+  
+  // Add any other fields that may be in the data
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined && !mappedData[key]) {
+      mappedData[key] = value;
     }
   }
   
-  // Return the mapped data
   return mappedData;
 }
