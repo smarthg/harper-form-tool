@@ -1,0 +1,830 @@
+{
+  "formTitle": "ACORD 126 - Commercial General Liability Section",
+  "formDescription": "Application form for commercial general liability insurance coverage",
+  "sections": [
+    {
+      "title": "Basic Information",
+      "fields": [
+        {
+          "id": "agencyCustomerId",
+          "label": "Agency Customer ID",
+          "type": "text",
+          "context": "Unique identifier assigned by the agency to the customer"
+        },
+        {
+          "id": "effectiveDate",
+          "label": "Effective Date",
+          "type": "date",
+          "context": "Date when the insurance policy will take effect"
+        },
+        {
+          "id": "agency",
+          "label": "Agency",
+          "type": "text",
+          "context": "Name of the insurance agency"
+        },
+        {
+          "id": "carrier",
+          "label": "Carrier",
+          "type": "text",
+          "context": "Name of the insurance carrier providing coverage"
+        },
+        {
+          "id": "naicCode",
+          "label": "NAIC Code",
+          "type": "text",
+          "context": "National Association of Insurance Commissioners identification code for the insurance carrier"
+        },
+        {
+          "id": "policyNumber",
+          "label": "Policy Number",
+          "type": "text",
+          "context": "Unique identifier assigned to the insurance policy"
+        },
+        {
+          "id": "applicantFirstNamedInsured",
+          "label": "Applicant / First Named Insured",
+          "type": "text",
+          "context": "Primary name of the individual or business being insured"
+        }
+      ]
+    },
+    {
+      "title": "Coverage / Limits",
+      "fields": [
+        {
+          "id": "coverageType",
+          "label": "Coverage Type",
+          "type": "radio",
+          "options": ["Commercial General Liability", "Owner's & Contractor's Protective"],
+          "context": "Type of liability coverage being requested"
+        },
+        {
+          "id": "claimsOccurrence",
+          "label": "Claims Made or Occurrence",
+          "type": "radio",
+          "options": ["Claims Made", "Occurrence"],
+          "context": "Specifies whether policy covers claims made during the policy period or incidents that occur during the policy period"
+        },
+        {
+          "id": "generalAggregate",
+          "label": "General Aggregate",
+          "type": "currency",
+          "context": "Maximum amount the insurer will pay for all covered claims during the policy period, except for products-completed operations"
+        },
+        {
+          "id": "limitAppliesPer",
+          "label": "Limit Applies Per",
+          "type": "checkbox",
+          "options": ["Policy", "Location", "Project", "Other"],
+          "context": "Specifies how the general aggregate limit applies"
+        },
+        {
+          "id": "productsCompletedOperationsAggregate",
+          "label": "Products & Completed Operations Aggregate",
+          "type": "currency",
+          "context": "Total amount insurer will pay for bodily injury and property damage arising from products and completed operations"
+        },
+        {
+          "id": "personalAdvertisingInjury",
+          "label": "Personal & Advertising Injury",
+          "type": "currency",
+          "context": "Coverage limit for claims involving libel, slander, invasion of privacy, etc."
+        },
+        {
+          "id": "eachOccurrence",
+          "label": "Each Occurrence",
+          "type": "currency",
+          "context": "Maximum amount paid for bodily injury and property damage per occurrence"
+        },
+        {
+          "id": "damageToRentedPremises",
+          "label": "Damage To Rented Premises (each occurrence)",
+          "type": "currency",
+          "context": "Coverage limit for damage to premises rented to the insured"
+        },
+        {
+          "id": "medicalExpense",
+          "label": "Medical Expense (Any one person)",
+          "type": "currency",
+          "context": "Coverage for medical expenses regardless of liability"
+        },
+        {
+          "id": "employeeBenefits",
+          "label": "Employee Benefits",
+          "type": "currency",
+          "context": "Coverage limit for employee benefits liability"
+        }
+      ]
+    },
+    {
+      "title": "Deductibles",
+      "fields": [
+        {
+          "id": "propertyDamage",
+          "label": "Property Damage",
+          "type": "currency",
+          "context": "Amount insured must pay before insurance covers property damage claims"
+        },
+        {
+          "id": "bodilyInjury",
+          "label": "Bodily Injury",
+          "type": "currency",
+          "context": "Amount insured must pay before insurance covers bodily injury claims"
+        },
+        {
+          "id": "deductibleType",
+          "label": "Deductible Type",
+          "type": "radio",
+          "options": ["Per Claim", "Per Occurrence"],
+          "context": "Specifies how the deductible applies to claims"
+        }
+      ]
+    },
+    {
+      "title": "Premiums",
+      "fields": [
+        {
+          "id": "premiseOperations",
+          "label": "Premises/Operations",
+          "type": "currency",
+          "context": "Premium amount for coverage of premises and operations"
+        },
+        {
+          "id": "products",
+          "label": "Products",
+          "type": "currency",
+          "context": "Premium amount for products liability coverage"
+        },
+        {
+          "id": "other",
+          "label": "Other",
+          "type": "currency",
+          "context": "Premium amount for other coverages"
+        },
+        {
+          "id": "total",
+          "label": "Total",
+          "type": "currency",
+          "context": "Total premium amount for all coverages"
+        }
+      ]
+    },
+    {
+      "title": "Additional Coverages",
+      "fields": [
+        {
+          "id": "otherCoverages",
+          "label": "Other Coverages, Restrictions and/or Endorsements",
+          "type": "textarea",
+          "context": "Details of any additional coverages, restrictions, or endorsements"
+        },
+        {
+          "id": "umUimCoverage",
+          "label": "UM / UIM Coverage",
+          "type": "radio",
+          "options": ["Is", "Is Not Available"],
+          "context": "Availability of Uninsured/Underinsured Motorist coverage (Wisconsin only)"
+        },
+        {
+          "id": "medicalPaymentsCoverage",
+          "label": "Medical Payments Coverage",
+          "type": "radio",
+          "options": ["Is", "Is Not Available"],
+          "context": "Availability of Medical Payments coverage (Wisconsin only)"
+        }
+      ]
+    },
+    {
+      "title": "Schedule of Hazards",
+      "fields": [
+        {
+          "id": "scheduleOfHazards",
+          "label": "Schedule of Hazards",
+          "type": "table",
+          "columns": [
+            {"id": "locNum", "label": "Loc #", "type": "text"},
+            {"id": "hazNum", "label": "Haz #", "type": "text"},
+            {"id": "classCode", "label": "Class Code", "type": "text"},
+            {"id": "premiumBasis", "label": "Premium Basis", "type": "text"},
+            {"id": "exposure", "label": "Exposure", "type": "text"},
+            {"id": "territory", "label": "Terr", "type": "text"},
+            {"id": "premOpsRate", "label": "Prem / Ops Rate", "type": "text"},
+            {"id": "productsRate", "label": "Products Rate", "type": "text"},
+            {"id": "premOpsPremium", "label": "Prem / Ops Premium", "type": "currency"},
+            {"id": "productsPremium", "label": "Products Premium", "type": "currency"}
+          ],
+          "context": "Details of hazards covered by the policy including classification, rates and premiums"
+        },
+        {
+          "id": "classificationDescription",
+          "label": "Classification Description",
+          "type": "textarea",
+          "context": "Description of the business operations being classified for coverage"
+        },
+        {
+          "id": "ratingPremiumBasis",
+          "label": "Rating and Premium Basis",
+          "type": "multiselect",
+          "options": [
+            {"id": "grossSales", "label": "(S) Gross Sales - Per $1,000/Sales"},
+            {"id": "payroll", "label": "(P) Payroll - Per $1,000/Pay"},
+            {"id": "area", "label": "(A) Area - Per 1,000/Sq Ft"},
+            {"id": "totalCost", "label": "(C) Total Cost - Per $1,000/Cost"},
+            {"id": "admissions", "label": "(M) Admissions - Per 1,000/Adm"},
+            {"id": "unit", "label": "(U) Unit - Per Unit"},
+            {"id": "other", "label": "(T) Other"}
+          ],
+          "context": "Basis used for calculating premiums"
+        }
+      ]
+    },
+    {
+      "title": "Claims Made",
+      "fields": [
+        {
+          "id": "proposedRetroactiveDate",
+          "label": "Proposed Retroactive Date",
+          "type": "date",
+          "context": "Date from which claims may be covered under a claims-made policy"
+        },
+        {
+          "id": "entryDateUninterruptedClaimsMadeCoverage",
+          "label": "Entry Date into Uninterrupted Claims Made Coverage",
+          "type": "date",
+          "context": "Date when continuous claims-made coverage began"
+        },
+        {
+          "id": "excludedUninsuredSelfInsured",
+          "label": "Has Any Product, Work, Accident, or Location Been Excluded, Uninsured or Self-Insured From Any Previous Coverage",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if any exposures were excluded or self-insured in prior policies"
+        },
+        {
+          "id": "tailCoveragePurchased",
+          "label": "Was Tail Coverage Purchased Under Any Previous Policy",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if extended reporting period coverage was purchased for prior policies"
+        }
+      ]
+    },
+    {
+      "title": "Employee Benefits Liability",
+      "fields": [
+        {
+          "id": "deductiblePerClaim",
+          "label": "Deductible Per Claim",
+          "type": "currency",
+          "context": "Amount insured must pay before insurance covers employee benefits liability claims"
+        },
+        {
+          "id": "numberOfEmployees",
+          "label": "Number of Employees",
+          "type": "number",
+          "context": "Total number of employees of the insured"
+        },
+        {
+          "id": "employeesCoveredByBenefitsPlans",
+          "label": "Number of Employees Covered by Employee Benefits Plans",
+          "type": "number",
+          "context": "Number of employees participating in benefit plans"
+        },
+        {
+          "id": "retroactiveDate",
+          "label": "Retroactive Date",
+          "type": "date",
+          "context": "Date from which employee benefits liability claims may be covered"
+        }
+      ]
+    },
+    {
+      "title": "Contractors",
+      "fields": [
+        {
+          "id": "drawPlansDesigns",
+          "label": "Does Applicant Draw Plans, Designs, or Specifications for Others",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant creates plans or designs for clients which may create professional liability exposure"
+        },
+        {
+          "id": "operationsIncludeBlasting",
+          "label": "Do Any Operations Include Blasting or Utilize or Store Explosive Material",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if operations involve hazardous blasting or explosives"
+        },
+        {
+          "id": "operationsIncludeExcavation",
+          "label": "Do Any Operations Include Excavation, Tunneling, Underground Work or Earth Moving",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if operations involve underground or excavation work"
+        },
+        {
+          "id": "subcontractorsCoveragesLessThanYours",
+          "label": "Do Your Subcontractors Carry Coverages or Limits Less Than Yours",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if subcontractors have lower insurance limits than applicant"
+        },
+        {
+          "id": "subcontractorsWithoutCertificate",
+          "label": "Are Subcontractors Allowed to Work Without Providing You With a Certificate of Insurance",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant requires proof of insurance from subcontractors"
+        },
+        {
+          "id": "leaseEquipmentToOthers",
+          "label": "Does Applicant Lease Equipment to Others With or Without Operators",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant leases equipment to others"
+        },
+        {
+          "id": "typeOfWorkSubcontracted",
+          "label": "Describe the Type of Work Subcontracted",
+          "type": "textarea",
+          "context": "Description of work performed by subcontractors"
+        },
+        {
+          "id": "paidToSubcontractors",
+          "label": "$ Paid to Subcontractors",
+          "type": "currency",
+          "context": "Total amount paid annually to subcontractors"
+        },
+        {
+          "id": "percentWorkSubcontracted",
+          "label": "% of Work Subcontracted",
+          "type": "percentage",
+          "context": "Percentage of total work that is subcontracted"
+        },
+        {
+          "id": "fullTimeStaff",
+          "label": "# Full-Time Staff",
+          "type": "number",
+          "context": "Number of full-time employees"
+        },
+        {
+          "id": "partTimeStaff",
+          "label": "# Part-Time Staff",
+          "type": "number",
+          "context": "Number of part-time employees"
+        }
+      ]
+    },
+    {
+      "title": "Products / Completed Operations",
+      "fields": [
+        {
+          "id": "productsTable",
+          "label": "Products List",
+          "type": "table",
+          "columns": [
+            {"id": "product", "label": "Products", "type": "text"},
+            {"id": "annualGrossSales", "label": "Annual Gross Sales", "type": "currency"},
+            {"id": "numberOfUnits", "label": "# of Units", "type": "number"},
+            {"id": "timeInMarket", "label": "Time in Market", "type": "text"},
+            {"id": "expectedLife", "label": "Expected Life", "type": "text"},
+            {"id": "intendedUse", "label": "Intended Use", "type": "text"},
+            {"id": "principalComponents", "label": "Principal Components", "type": "text"}
+          ],
+          "context": "Details of products manufactured or sold by the applicant"
+        },
+        {
+          "id": "installServiceDemonstrate",
+          "label": "Does Applicant Install, Service or Demonstrate Products",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant installs, services, or demonstrates their products"
+        },
+        {
+          "id": "foreignProducts",
+          "label": "Foreign Products Sold, Distributed, Used as Components",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant sells or uses foreign-made products"
+        },
+        {
+          "id": "researchAndDevelopment",
+          "label": "Research and Development Conducted or New Products Planned",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant conducts R&D or plans new products"
+        },
+        {
+          "id": "guaranteesWarranties",
+          "label": "Guarantees, Warranties, Hold Harmless Agreements",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant provides guarantees or warranties"
+        },
+        {
+          "id": "productsAircraftSpace",
+          "label": "Products Related to Aircraft/Space Industry",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if products are used in aircraft or aerospace applications"
+        },
+        {
+          "id": "productsRecalled",
+          "label": "Products Recalled, Discontinued, Changed",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if any products have been recalled or discontinued"
+        },
+        {
+          "id": "productsRepackaged",
+          "label": "Products of Others Sold or Re-Packaged Under Applicant Label",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant sells others' products under their own label"
+        },
+        {
+          "id": "productsUnderLabelOfOthers",
+          "label": "Products Under Label of Others",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant's products are sold under others' labels"
+        },
+        {
+          "id": "vendorsCoverage",
+          "label": "Vendors Coverage Required",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if vendors of applicant's products require additional insured status"
+        },
+        {
+          "id": "namedInsuredSellToOthers",
+          "label": "Does Any Named Insured Sell to Other Named Insureds",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if related entities named on policy sell products to each other"
+        }
+      ]
+    },
+    {
+      "title": "Additional Interest / Certificate Recipient",
+      "fields": [
+        {
+          "id": "additionalInterests",
+          "label": "Additional Interests",
+          "type": "checkbox",
+          "options": [
+            "Additional Insured",
+            "Employee as Lessor",
+            "Lender's Loss Payable",
+            "Lienholder",
+            "Loss Payee",
+            "Mortgagee"
+          ],
+          "context": "Type of interest the third party has in the policy"
+        },
+        {
+          "id": "nameAndAddress",
+          "label": "Name and Address",
+          "type": "textarea",
+          "context": "Contact information for additional interest"
+        },
+        {
+          "id": "rank",
+          "label": "Rank",
+          "type": "text",
+          "context": "Priority ranking of the additional interest"
+        },
+        {
+          "id": "evidence",
+          "label": "Evidence",
+          "type": "checkbox",
+          "context": "Indicates if evidence of insurance is required"
+        },
+        {
+          "id": "certificate",
+          "label": "Certificate",
+          "type": "checkbox",
+          "context": "Indicates if a certificate of insurance is required"
+        },
+        {
+          "id": "interestInItemNumber",
+          "label": "Interest in Item Number",
+          "type": "text",
+          "context": "Specific item number that the additional interest relates to"
+        },
+        {
+          "id": "location",
+          "label": "Location",
+          "type": "text",
+          "context": "Physical location related to the additional interest"
+        },
+        {
+          "id": "building",
+          "label": "Building",
+          "type": "text",
+          "context": "Building number or identifier related to the additional interest"
+        },
+        {
+          "id": "itemClass",
+          "label": "Item Class",
+          "type": "text",
+          "context": "Classification of item related to the additional interest"
+        },
+        {
+          "id": "item",
+          "label": "Item",
+          "type": "text",
+          "context": "Specific item related to the additional interest"
+        },
+        {
+          "id": "itemDescription",
+          "label": "Item Description",
+          "type": "textarea",
+          "context": "Description of item related to the additional interest"
+        },
+        {
+          "id": "referenceLoanNumber",
+          "label": "Reference / Loan #",
+          "type": "text",
+          "context": "Reference or loan number related to the additional interest"
+        }
+      ]
+    },
+    {
+      "title": "General Information",
+      "fields": [
+        {
+          "id": "medicalFacilities",
+          "label": "Any Medical Facilities Provided or Medical Professionals Employed or Contracted",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant provides medical services or employs medical professionals"
+        },
+        {
+          "id": "radioactiveNuclearMaterials",
+          "label": "Any Exposure to Radioactive/Nuclear Materials",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if operations involve radioactive or nuclear materials"
+        },
+        {
+          "id": "hazardousMaterial",
+          "label": "Do/Have Past, Present or Discontinued Operations Involve(d) Storing, Treating, Discharging, Applying, Disposing, or Transporting of Hazardous Material",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if operations involve hazardous waste or materials"
+        },
+        {
+          "id": "operationsSoldAcquiredDiscontinued",
+          "label": "Any Operations Sold, Acquired, or Discontinued in Last Five (5) Years",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if business operations have changed significantly in recent years"
+        },
+        {
+          "id": "rentLoanEquipment",
+          "label": "Do You Rent or Loan Equipment to Others",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant rents or loans equipment to others"
+        },
+        {
+          "id": "equipmentTable",
+          "label": "Equipment Details",
+          "type": "table",
+          "columns": [
+            {"id": "equipment", "label": "Equipment", "type": "text"},
+            {"id": "equipmentType", "label": "Type of Equipment", "type": "radio", "options": ["Small Tools", "Large Equipment"]},
+            {"id": "instructionGiven", "label": "Instruction Given", "type": "radio", "options": ["Yes", "No"]}
+          ],
+          "context": "Details of equipment rented or loaned to others"
+        },
+        {
+          "id": "watercraftDocksFloats",
+          "label": "Any Watercraft, Docks, Floats Owned, Hired or Leased",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant owns or leases watercraft or water structures"
+        },
+        {
+          "id": "parkingFacilities",
+          "label": "Any Parking Facilities Owned/Rented",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant owns or rents parking facilities"
+        },
+        {
+          "id": "feeForParking",
+          "label": "Is a Fee Charged for Parking",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant charges for parking"
+        },
+        {
+          "id": "recreationFacilities",
+          "label": "Recreation Facilities Provided",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant provides recreational facilities"
+        },
+        {
+          "id": "lodgingOperations",
+          "label": "Are There Any Lodging Operations Including Apartments",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant operates lodging facilities"
+        },
+        {
+          "id": "numberOfApartments",
+          "label": "# Apts",
+          "type": "number",
+          "context": "Number of apartment units owned or managed"
+        },
+        {
+          "id": "totalApartmentArea",
+          "label": "Total Apt Area",
+          "type": "text",
+          "context": "Total square footage of apartment units"
+        },
+        {
+          "id": "otherLodgingOperations",
+          "label": "Describe Other Lodging Operations",
+          "type": "textarea",
+          "context": "Description of lodging operations other than apartments"
+        },
+        {
+          "id": "swimmingPool",
+          "label": "Is There a Swimming Pool on Premises",
+          "type": "checkbox",
+          "options": ["Approved Fence", "Limited Access", "Diving Board", "Slide", "Above Ground", "In Ground", "Life Guard"],
+          "context": "Details of swimming pool on premises"
+        },
+        {
+          "id": "socialEvents",
+          "label": "Are Social Events Sponsored",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant sponsors social events"
+        },
+        {
+          "id": "athleticTeams",
+          "label": "Are Athletic Teams Sponsored",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant sponsors athletic teams"
+        },
+        {
+          "id": "athleticTeamsTable",
+          "label": "Athletic Teams Details",
+          "type": "table",
+          "columns": [
+            {"id": "typeOfSport", "label": "Type of Sport", "type": "text"},
+            {"id": "contactSport", "label": "Contact Sport", "type": "radio", "options": ["Yes", "No"]},
+            {"id": "ageGroup", "label": "Age Group", "type": "checkbox", "options": ["12 & Under", "13-18", "Over 18"]},
+            {"id": "extentOfSponsorship", "label": "Extent of Sponsorship", "type": "text"}
+          ],
+          "context": "Details of athletic teams sponsored by applicant"
+        },
+        {
+          "id": "structuralAlterations",
+          "label": "Any Structural Alterations Contemplated",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant plans structural changes to buildings"
+        },
+        {
+          "id": "demolitionExposure",
+          "label": "Any Demolition Exposure Contemplated",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant plans demolition activities"
+        },
+        {
+          "id": "activeInJointVentures",
+          "label": "Has Applicant Been Active in or is Currently Active in Joint Ventures",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant participates in joint ventures"
+        },
+        {
+          "id": "leaseEmployees",
+          "label": "Do You Lease Employees to or From Other Employers",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant leases employees"
+        },
+        {
+          "id": "employeeLeasingTable",
+          "label": "Employee Leasing Details",
+          "type": "table",
+          "columns": [
+            {"id": "leaseTo", "label": "Lease To", "type": "text"},
+            {"id": "workerCompCoverageToYN", "label": "Workers Compensation Coverage Carried (Y/N)", "type": "text"},
+            {"id": "leaseFrom", "label": "Lease From", "type": "text"},
+            {"id": "workerCompCoverageFromYN", "label": "Workers Compensation Coverage Carried (Y/N)", "type": "text"}
+          ],
+          "context": "Details of employee leasing arrangements"
+        },
+        {
+          "id": "laborInterchange",
+          "label": "Is There a Labor Interchange With Any Other Business or Subsidiaries",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if employees are shared with other businesses"
+        },
+        {
+          "id": "dayCareFacilities",
+          "label": "Are Day Care Facilities Operated or Controlled",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant operates day care facilities"
+        },
+        {
+          "id": "crimesOnPremises",
+          "label": "Have Any Crimes Occurred or Been Attempted on Your Premises Within the Last Three (3) Years",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if crimes have occurred on the premises"
+        },
+        {
+          "id": "safetySecurityPolicy",
+          "label": "Is There a Formal, Written Safety and Security Policy in Effect",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if applicant has formal safety policies"
+        },
+        {
+          "id": "promotionalSafetyClaims",
+          "label": "Does the Businesses' Promotional Literature Make Any Representations About the Safety or Security of the Premises",
+          "type": "radio",
+          "options": ["Yes", "No"],
+          "context": "Indicates if marketing materials make safety claims"
+        }
+      ]
+    },
+    {
+      "title": "Remarks",
+      "fields": [
+        {
+          "id": "remarks",
+          "label": "Remarks",
+          "type": "textarea",
+          "context": "Additional information or explanations for yes answers"
+        }
+      ]
+    },
+    {
+      "title": "Signature",
+      "fields": [
+        {
+          "id": "producerSignature",
+          "label": "Producer's Signature",
+          "type": "signature",
+          "context": "Electronic signature of the insurance producer"
+        },
+        {
+          "id": "producerName",
+          "label": "Producer's Name (Please Print)",
+          "type": "text",
+          "context": "Printed name of the insurance producer"
+        },
+        {
+          "id": "stateProducerLicenseNo",
+          "label": "State Producer License No",
+          "type": "text",
+          "context": "Producer's state license number"
+        },
+        {
+          "id": "applicantSignature",
+          "label": "Applicant's Signature",
+          "type": "signature",
+          "context": "Electronic signature of the applicant/insured"
+        },
+        {
+          "id": "signatureDate",
+          "label": "Date",
+          "type": "date",
+          "context": "Date when the application was signed"
+        },
+        {
+          "id": "nationalProducerNumber",
+          "label": "National Producer Number",
+          "type": "text",
+          "context": "National producer identification number"
+        }
+      ]
+    },
+    {
+      "title": "Fraud Warnings",
+      "fields": [
+        {
+          "id": "fraudWarningsAcknowledgement",
+          "label": "Fraud Warnings Acknowledgement",
+          "type": "checkbox",
+          "context": "Acknowledgement of state-specific fraud warnings that apply to insurance applications"
+        }
+      ]
+    }
+  ]
+}
