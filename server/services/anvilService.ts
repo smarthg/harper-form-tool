@@ -151,54 +151,81 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
  * @returns Data formatted for Anvil PDF filling
  */
 function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
-  // Create a structure that follows the Anvil example payload
+  // Create a structure that exactly matches the Anvil example payload
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  
+  // If the data is already in Anvil format, use it directly
+  if (data.title === "Acord 125" && data.data) {
+    console.log("Using pre-formatted data with Anvil template structure");
+    return data;
+  }
+  
+  // Otherwise, map the data to the Anvil format
+  console.log("Mapping data to Anvil format");
   
   // Determine business type to set appropriate flags (default to Corporation)
   const businessType = data.businessType || "corporation";
   
-  // Create the payload structure with comprehensive information
-  const mappedData: Record<string, any> = {
-    // Basic template information
+  // Handle applicant name
+  let applicantName: any = {};
+  if (data.namedInsured) {
+    // Try to use the company name as fullName if available
+    applicantName = { 
+      fullName: data.namedInsured 
+    };
+  } else if (data.insuredCompanyName) {
+    // Or use the insured company name if available
+    applicantName = { 
+      fullName: data.insuredCompanyName 
+    };
+  } else {
+    // Otherwise use individual name components
+    applicantName = {
+      firstName: data.firstName || "",
+      mi: data.middleInitial || "",
+      lastName: data.lastName || ""
+    };
+  }
+  
+  // Create the payload structure to match Anvil's exact expected format
+  return {
+    // Template information
     title: "Acord 125",
     fontSize: 10,
     textColor: "#333333",
     
-    // Nest all the actual data under the "data" key as per Anvil's format
+    // Nest all form data under the "data" key
     data: {
       // Transaction Information
       transactionStatus: "Quote",
       transactionType: "New",
-      date: today,
+      timeOfDay: "AM", // Required field
       proposedEffectiveDate: data.startDate || today,
       proposedExpirationDate: data.endDate || today,
+      date: today,
       
-      // Agency Information
+      // Agency/Policy Information
       agency: data.agency || "",
-      agencyCustomerId: data.agencyCustomerId || "",
       carrier: data.carrier || "",
       naicCode: data.naicCode || "",
+      companyPolicyOrProgramName: "",
+      programCode: "",
       policyNumber: data.policyNumber || "",
+      underwriter: "",
+      underwriterOffice: "",
+      agencyCustomerId: data.agencyCustomerId || "",
       
-      // Applicant Information - Use company name if available
-      applicantName: data.namedInsured 
-        ? { fullName: data.namedInsured } 
-        : {
-            firstName: data.firstName || "",
-            mi: data.middleInitial || "",
-            lastName: data.lastName || ""
-          },
-      
-      // Business type
+      // Applicant Information
+      applicantName: applicantName,
       applicantBusinessType: businessType.charAt(0).toUpperCase() + businessType.slice(1),
       
-      // Important identifiers from the form
+      // Business Codes and Identifiers
       glCode: data.glCode || "",
       sic: data.sic || "",
       naics: data.naics || "",
       feinOrSocSec: data.feinOrSocSec || data.insuredFein || "",
       
-      // Mailing address with complete information
+      // Mailing Address
       mailingAddress: {
         street1: data.mailingAddress || data.insuredAddress || "",
         street2: data.mailingAddress2 || "",
@@ -210,32 +237,36 @@ function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
       
       // Contact Information
       businessPhone: {
-        num: data.businessPhone || data.phone || "",
+        num: data.businessPhone || data.phone || data.insuredPhone || "",
         region: "US", 
         baseRegion: "US"
       },
-      websiteAddress: data.websiteAddress || "",
+      websiteAddress: data.websiteAddress || data.insuredWebsite || "",
       
-      // Business Information
-      natureOfBusiness: data.natureOfBusiness || data.businessNature || "",
-      descriptionOfPrimaryOperations: data.descriptionOfPrimaryOperations || "",
-      
-      // Location Information if available
-      premisesInformation1: data.locationStreet ? {
-        street1: data.locationStreet || "",
+      // Premises Information
+      premisesInformation1: {
+        street1: data.locationStreet || data.insuredAddress || "",
         street2: "",
-        city: data.locationCity || "",
-        state: data.locationState || "",
-        zip: data.locationZip || "",
+        city: data.locationCity || data.insuredCity || "",
+        state: data.locationState || data.insuredState || "",
+        zip: data.locationZip || data.insuredZip || "",
         country: "US"
-      } : undefined,
+      },
       
-      // Business details
-      fullTimeEmployees: data.fullTimeEmployees || 0,
-      partTimeEmployees: data.partTimeEmployees || 0,
-      annualRevenues: data.annualRevenue || 0,
+      // Business Details
+      natureOfBusiness: data.natureOfBusiness || 
+        (data.businessNature === "office" ? "Office" :
+         data.businessNature === "retail" ? "Retail" :
+         data.businessNature === "apartments" ? "Apartments" :
+         data.businessNature === "contractor" ? "Contractor" :
+         data.businessNature === "manufacturing" ? "Manufacturing" :
+         data.businessNature === "wholesale" ? "Wholesale" : ""),
+      descriptionOfPrimaryOperations: data.descriptionOfPrimaryOperations || data.operationsDescription || "",
+      fullTimeEmployees: parseInt(data.fullTimeEmployees || "0") || 0,
+      partTimeEmployees: parseInt(data.partTimeEmployees || "0") || 0,
+      annualRevenues: parseFloat(data.annualRevenue || "0") || 0,
       
-      // Business Type Flags - set based on the actual business type
+      // Business Type Flags - only one should be checked based on the business type
       corporation: businessType === "corporation",
       individual: businessType === "individual", 
       partnership: businessType === "partnership",
@@ -243,19 +274,22 @@ function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
       llc: businessType === "llc",
       trust: businessType === "trust",
       notForProfitOrg: businessType === "nonProfit" || businessType === "notForProfitOrg",
-      subchapterSCorporation: businessType === "subchapterSCorp"
+      subchapterSCorporation: businessType === "subchapterSCorp",
+      
+      // Duplicate fields that may be needed for the PDF template
+      applicantName1: applicantName,
+      mailingAddress1: {
+        street1: data.mailingAddress || data.insuredAddress || "",
+        street2: data.mailingAddress2 || "",
+        city: data.mailingCity || data.insuredCity || "",
+        state: data.mailingState || data.insuredState || "",
+        zip: data.mailingZipCode || data.insuredZip || "",
+        country: "US"
+      },
+      glCode1: data.glCode || "",
+      sic1: data.sic || "",
+      naics1: data.naics || "",
+      feinOrSocSec1: data.feinOrSocSec || data.insuredFein || ""
     }
   };
-  
-  // Add any missing fields from the data object without overwriting existing ones
-  if (data.data) {
-    for (const key in data.data) {
-      if (!mappedData.data[key]) {
-        mappedData.data[key] = data.data[key];
-      }
-    }
-  }
-  
-  // Return the complete structure
-  return mappedData;
 }

@@ -12,51 +12,65 @@ export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<str
   // Format date as YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
   
-  // Determine the business type flags (default to Corporation if not specified)
+  // Determine which business type checkbox should be true
   const businessType = formData.businessType || "corporation";
   
-  // Create a structure that matches the Anvil expected payload format
+  // Construct the applicant name based on available data
+  let applicantName: any = {};
+  if (formData.namedInsured) {
+    // Try to use the company name as fullName if available
+    applicantName = { 
+      fullName: formData.namedInsured 
+    };
+  } else if (formData.insuredCompanyName) {
+    // Or use the insured company name if available
+    applicantName = { 
+      fullName: formData.insuredCompanyName 
+    };
+  } else {
+    // Otherwise use individual name components
+    applicantName = {
+      firstName: formData.firstName || "",
+      mi: formData.middleInitial || "",
+      lastName: formData.lastName || ""
+    };
+  }
+
+  // Create a structure that exactly matches the Anvil expected payload format
   return {
-    // Template information
+    // Template information - these are required
     title: "Acord 125",
     fontSize: 10,
     textColor: "#333333",
     
-    // Nested data object as per the Anvil example
+    // Anvil requires all data under the 'data' key
     data: {
-      // Transaction info
+      // Transaction Information section
       transactionStatus: "Quote",
       transactionType: "New",
-      date: today,
+      timeOfDay: "AM",
       proposedEffectiveDate: formData.startDate || today,
       proposedExpirationDate: formData.endDate || today,
+      date: today,
       
-      // Agency info
+      // Agency/Policy Information section
       agency: formData.agency || "",
-      agencyCustomerId: formData.agencyCustomerId || "",
       carrier: formData.carrier || "",
       naicCode: formData.naicCode || "",
       policyNumber: formData.policyNumber || "",
+      companyPolicyOrProgramName: "",
+      programCode: "",
+      underwriter: "",
+      underwriterOffice: "",
+      agencyCustomerId: formData.agencyCustomerId || "",
       
-      // Named Insured - Use company name if available
-      applicantName: formData.namedInsured 
-        ? { fullName: formData.namedInsured } 
-        : {
-            firstName: formData.firstName || "",
-            mi: formData.middleInitial || "",
-            lastName: formData.lastName || ""
-          },
+      // Applicant Information section - critical field
+      applicantName: applicantName,
       
-      // Business type
+      // Business Type
       applicantBusinessType: businessType.charAt(0).toUpperCase() + businessType.slice(1),
       
-      // Codes and identifiers from the form
-      glCode: formData.glCode || "",
-      sic: formData.sic || "",
-      naics: formData.naics || "",
-      feinOrSocSec: formData.insuredFein || formData.feinOrSocSec || "",
-      
-      // Mailing address - use better field mapping
+      // Mailing Address - critical field
       mailingAddress: {
         street1: formData.mailingAddress || formData.insuredAddress || "",
         street2: formData.mailingAddress2 || "",
@@ -66,34 +80,48 @@ export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<str
         country: "US"
       },
       
-      // Contact info
+      // Business Codes and Identifiers
+      glCode: formData.glCode || "",
+      sic: formData.sic || "",
+      naics: formData.naics || "",
+      feinOrSocSec: formData.feinOrSocSec || formData.insuredFein || "",
+      
+      // Contact Information
       businessPhone: {
-        num: formData.businessPhone || formData.phone || "",
+        num: formData.businessPhone || formData.phone || formData.insuredPhone || "",
         region: "US",
         baseRegion: "US"
       },
-      websiteAddress: formData.websiteAddress || "",
+      websiteAddress: formData.websiteAddress || formData.insuredWebsite || "",
       
-      // Nature of business
-      natureOfBusiness: formData.natureOfBusiness || formData.businessNature || "",
-      descriptionOfPrimaryOperations: formData.descriptionOfPrimaryOperations || "",
-      
-      // Premises information if available
-      premisesInformation1: formData.locationStreet ? {
-        street1: formData.locationStreet || "",
+      // Premises Information - use location data if available
+      premisesInformation1: {
+        street1: formData.locationStreet || formData.insuredAddress || "",
         street2: "",
-        city: formData.locationCity || "",
-        state: formData.locationState || "",
-        zip: formData.locationZip || "",
+        city: formData.locationCity || formData.insuredCity || "",
+        state: formData.locationState || formData.insuredState || "",
+        zip: formData.locationZip || formData.insuredZip || "",
         country: "US"
-      } : undefined,
+      },
       
-      // Business details
-      fullTimeEmployees: formData.fullTimeEmployees || 0,
-      partTimeEmployees: formData.partTimeEmployees || 0,
-      annualRevenues: formData.annualRevenue || 0,
+      // Nature of Business
+      natureOfBusiness: formData.natureOfBusiness || 
+        (formData.businessNature === "office" ? "Office" :
+         formData.businessNature === "retail" ? "Retail" :
+         formData.businessNature === "apartments" ? "Apartments" :
+         formData.businessNature === "contractor" ? "Contractor" :
+         formData.businessNature === "manufacturing" ? "Manufacturing" :
+         formData.businessNature === "wholesale" ? "Wholesale" : ""),
+         
+      // Description of operations
+      descriptionOfPrimaryOperations: formData.descriptionOfPrimaryOperations || formData.operationsDescription || "",
       
-      // Business type flags - set based on the actual business type
+      // Business Details
+      fullTimeEmployees: parseInt(formData.fullTimeEmployees || "0") || 0,
+      partTimeEmployees: parseInt(formData.partTimeEmployees || "0") || 0,
+      annualRevenues: parseFloat(formData.annualRevenue || "0") || 0,
+      
+      // Business Type Checkboxes - only one should be true based on the type
       corporation: businessType === "corporation",
       individual: businessType === "individual",
       partnership: businessType === "partnership",
@@ -101,7 +129,23 @@ export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<str
       llc: businessType === "llc",
       trust: businessType === "trust",
       notForProfitOrg: businessType === "nonProfit" || businessType === "notForProfitOrg",
-      subchapterSCorporation: businessType === "subchapterSCorp"
+      subchapterSCorporation: businessType === "subchapterSCorp",
+      
+      // Additional fields that may be needed for the form
+      // These help position elements on some forms
+      applicantName1: applicantName,
+      mailingAddress1: {
+        street1: formData.mailingAddress || formData.insuredAddress || "",
+        street2: formData.mailingAddress2 || "",
+        city: formData.mailingCity || formData.insuredCity || "",
+        state: formData.mailingState || formData.insuredState || "",
+        zip: formData.mailingZipCode || formData.insuredZip || "",
+        country: "US"
+      },
+      glCode1: formData.glCode || "",
+      sic1: formData.sic || "",
+      naics1: formData.naics || "",
+      feinOrSocSec1: formData.feinOrSocSec || formData.insuredFein || ""
     }
   };
 }
