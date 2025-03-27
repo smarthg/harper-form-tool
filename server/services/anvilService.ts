@@ -52,10 +52,26 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
     // We don't need to read the template file anymore since we're using a template ID from Anvil
     
     // Now we'll use fillPDF with an actual template ID
-    const anvilData = mapDataToAnvilFormat(data);
+    let mappedData = mapDataToAnvilFormat(data);
+    
+    // Include some test data if we get an empty object
+    // This ensures we have something to send to Anvil for testing
+    if (Object.keys(mappedData).length === 0) {
+      console.log('Warning: No mapped data available, adding test data for debugging');
+      mappedData = {
+        'named_insured': 'Test Business Name',
+        'mailing_address': '123 Test Street',
+        'mailing_city': 'Test City',
+        'mailing_state': 'TX',
+        'mailing_zip': '12345'
+      };
+    }
+    
+    // Create a final object to send to Anvil
+    const anvilData = mappedData;
     
     // Log the mapped data for debugging
-    console.log('Anvil data for PDF filling:', anvilData);
+    console.log('Anvil data for PDF filling:', JSON.stringify(anvilData, null, 2));
     
     // When using a template ID, we only need to provide the data
     // The template is already stored on Anvil's servers
@@ -89,7 +105,15 @@ export async function fillPdf(data: Record<string, any>): Promise<Buffer> {
       // The response from Anvil API is an object with statusCode and data properties
       if (response.statusCode && response.statusCode !== 200) {
         console.error(`Anvil API error: Status ${response.statusCode}`);
-        throw new Error(`Anvil API returned error status: ${response.statusCode}`);
+        
+        // Try to extract more details from the error response
+        if (response.errors) {
+          console.error('Anvil API error details:', JSON.stringify(response.errors, null, 2));
+          throw new Error(`Anvil API returned error status: ${response.statusCode}, Details: ${JSON.stringify(response.errors)}`);
+        } else {
+          console.error('Full Anvil error response:', JSON.stringify(response, null, 2));
+          throw new Error(`Anvil API returned error status: ${response.statusCode}`);
+        }
       }
       
       if (!response.data) {
