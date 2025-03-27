@@ -12,6 +12,9 @@ export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<str
   // Format date as YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
   
+  // Determine the business type flags (default to Corporation if not specified)
+  const businessType = formData.businessType || "corporation";
+  
   // Create a structure that matches the Anvil expected payload format
   return {
     // Template information
@@ -35,46 +38,70 @@ export function mapFormDataToAnvilFields(formData: Acord125FormData): Record<str
       naicCode: formData.naicCode || "",
       policyNumber: formData.policyNumber || "",
       
-      // Applicant info with fallbacks for required fields
-      applicantName: {
-        firstName: formData.firstName || "Test",  // Fallback value
-        mi: "",
-        lastName: formData.lastName || "Client"   // Fallback value
-      },
+      // Named Insured - Use company name if available
+      applicantName: formData.namedInsured 
+        ? { fullName: formData.namedInsured } 
+        : {
+            firstName: formData.firstName || "",
+            mi: formData.middleInitial || "",
+            lastName: formData.lastName || ""
+          },
       
       // Business type
-      applicantBusinessType: "Corporation",
+      applicantBusinessType: businessType.charAt(0).toUpperCase() + businessType.slice(1),
       
-      // Mailing address with fallbacks
+      // Codes and identifiers from the form
+      glCode: formData.glCode || "",
+      sic: formData.sic || "",
+      naics: formData.naics || "",
+      feinOrSocSec: formData.insuredFein || formData.feinOrSocSec || "",
+      
+      // Mailing address - use better field mapping
       mailingAddress: {
-        street1: formData.insuredAddress || "123 Main St",
-        street2: "",
-        city: formData.insuredCity || "San Francisco",
-        state: formData.insuredState || "CA",
-        zip: formData.insuredZip || "94103",
+        street1: formData.mailingAddress || formData.insuredAddress || "",
+        street2: formData.mailingAddress2 || "",
+        city: formData.mailingCity || formData.insuredCity || "",
+        state: formData.mailingState || formData.insuredState || "",
+        zip: formData.mailingZipCode || formData.insuredZip || "",
         country: "US"
       },
       
       // Contact info
       businessPhone: {
-        num: formData.phone || "5555555555", 
+        num: formData.businessPhone || formData.phone || "",
         region: "US",
         baseRegion: "US"
       },
+      websiteAddress: formData.websiteAddress || "",
       
-      // Business info
-      natureOfBusiness: formData.businessNature || "Office",
-      feinOrSocSec: formData.insuredFein || "",
+      // Nature of business
+      natureOfBusiness: formData.natureOfBusiness || formData.businessNature || "",
+      descriptionOfPrimaryOperations: formData.descriptionOfPrimaryOperations || "",
       
-      // Some business type flags
-      corporation: true,
-      individual: false,
-      partnership: false,
-      jointVenture: false,
-      llc: false,
-      trust: false,
-      notForProfitOrg: false,
-      subchapterSCorporation: false
+      // Premises information if available
+      premisesInformation1: formData.locationStreet ? {
+        street1: formData.locationStreet || "",
+        street2: "",
+        city: formData.locationCity || "",
+        state: formData.locationState || "",
+        zip: formData.locationZip || "",
+        country: "US"
+      } : undefined,
+      
+      // Business details
+      fullTimeEmployees: formData.fullTimeEmployees || 0,
+      partTimeEmployees: formData.partTimeEmployees || 0,
+      annualRevenues: formData.annualRevenue || 0,
+      
+      // Business type flags - set based on the actual business type
+      corporation: businessType === "corporation",
+      individual: businessType === "individual",
+      partnership: businessType === "partnership",
+      jointVenture: businessType === "jointVenture",
+      llc: businessType === "llc",
+      trust: businessType === "trust",
+      notForProfitOrg: businessType === "nonProfit" || businessType === "notForProfitOrg",
+      subchapterSCorporation: businessType === "subchapterSCorp"
     }
   };
 }

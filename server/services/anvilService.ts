@@ -151,20 +151,22 @@ export function storePdfTemporarily(filledPdf: Buffer): string {
  * @returns Data formatted for Anvil PDF filling
  */
 function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
-  // Create a simpler flat structure that follows the Anvil example payload
+  // Create a structure that follows the Anvil example payload
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
   
-  // Create a flat structure with basic information
+  // Determine business type to set appropriate flags (default to Corporation)
+  const businessType = data.businessType || "corporation";
+  
+  // Create the payload structure with comprehensive information
   const mappedData: Record<string, any> = {
-    // Basic information with today's date
+    // Basic template information
     title: "Acord 125",
     fontSize: 10,
     textColor: "#333333",
     
-    // We're nesting all the actual data under a "data" key
-    // as per the Anvil template example
+    // Nest all the actual data under the "data" key as per Anvil's format
     data: {
-      // Transaction Information - with defaults
+      // Transaction Information
       transactionStatus: "Quote",
       transactionType: "New",
       date: today,
@@ -178,39 +180,82 @@ function mapDataToAnvilFormat(data: Record<string, any>): Record<string, any> {
       naicCode: data.naicCode || "",
       policyNumber: data.policyNumber || "",
       
-      // Applicant Information - using a simpler approach
-      applicantName: {
-        firstName: data.firstName || "Test", // Default value if empty
-        mi: "",
-        lastName: data.lastName || "Client"  // Default value if empty
-      },
+      // Applicant Information - Use company name if available
+      applicantName: data.namedInsured 
+        ? { fullName: data.namedInsured } 
+        : {
+            firstName: data.firstName || "",
+            mi: data.middleInitial || "",
+            lastName: data.lastName || ""
+          },
       
-      // Business Type
-      applicantBusinessType: "Corporation",
+      // Business type
+      applicantBusinessType: businessType.charAt(0).toUpperCase() + businessType.slice(1),
       
-      // Simple mailing address
+      // Important identifiers from the form
+      glCode: data.glCode || "",
+      sic: data.sic || "",
+      naics: data.naics || "",
+      feinOrSocSec: data.feinOrSocSec || data.insuredFein || "",
+      
+      // Mailing address with complete information
       mailingAddress: {
-        street1: data.insuredAddress || "123 Main St",
-        street2: "",
-        city: data.insuredCity || "San Francisco",
-        state: data.insuredState || "CA",
-        zip: data.insuredZip || "94103",
+        street1: data.mailingAddress || data.insuredAddress || "",
+        street2: data.mailingAddress2 || "",
+        city: data.mailingCity || data.insuredCity || "",
+        state: data.mailingState || data.insuredState || "",
+        zip: data.mailingZipCode || data.insuredZip || "",
         country: "US"
       },
       
-      // Contact Info
+      // Contact Information
       businessPhone: {
-        num: data.phone || "5555555555",
+        num: data.businessPhone || data.phone || "",
         region: "US", 
         baseRegion: "US"
       },
+      websiteAddress: data.websiteAddress || "",
       
-      // Property Info - only include essential fields
-      natureOfBusiness: data.businessNature || "Office",
-      feinOrSocSec: data.insuredFein || ""
+      // Business Information
+      natureOfBusiness: data.natureOfBusiness || data.businessNature || "",
+      descriptionOfPrimaryOperations: data.descriptionOfPrimaryOperations || "",
+      
+      // Location Information if available
+      premisesInformation1: data.locationStreet ? {
+        street1: data.locationStreet || "",
+        street2: "",
+        city: data.locationCity || "",
+        state: data.locationState || "",
+        zip: data.locationZip || "",
+        country: "US"
+      } : undefined,
+      
+      // Business details
+      fullTimeEmployees: data.fullTimeEmployees || 0,
+      partTimeEmployees: data.partTimeEmployees || 0,
+      annualRevenues: data.annualRevenue || 0,
+      
+      // Business Type Flags - set based on the actual business type
+      corporation: businessType === "corporation",
+      individual: businessType === "individual", 
+      partnership: businessType === "partnership",
+      jointVenture: businessType === "jointVenture",
+      llc: businessType === "llc",
+      trust: businessType === "trust",
+      notForProfitOrg: businessType === "nonProfit" || businessType === "notForProfitOrg",
+      subchapterSCorporation: businessType === "subchapterSCorp"
     }
   };
   
-  // Return the simplified structure
+  // Add any missing fields from the data object without overwriting existing ones
+  if (data.data) {
+    for (const key in data.data) {
+      if (!mappedData.data[key]) {
+        mappedData.data[key] = data.data[key];
+      }
+    }
+  }
+  
+  // Return the complete structure
   return mappedData;
 }

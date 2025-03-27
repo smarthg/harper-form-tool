@@ -73,7 +73,32 @@ export const formDataSchema = z.object({
   carrier: z.string().optional(),
   naicCode: z.string().optional(),
   
-  // Insured information
+  // Applicant/Named Insured information
+  namedInsured: z.string().optional(),
+  middleInitial: z.string().optional(),
+  
+  // Codes and identifiers (visible in screenshots)
+  glCode: z.string().optional(),
+  sic: z.string().optional(),
+  naics: z.string().optional(),
+  feinOrSocSec: z.string().optional(),
+  
+  // Mailing address information
+  mailingAddress: z.string().optional(),
+  mailingAddress2: z.string().optional(),
+  mailingCity: z.string().optional(),
+  mailingState: z.string().optional(),
+  mailingZipCode: z.string().optional(),
+  
+  // Website and contact
+  websiteAddress: z.string().optional(),
+  businessPhone: z.string().optional(),
+  
+  // Business description and operations
+  natureOfBusiness: z.string().optional(),
+  descriptionOfPrimaryOperations: z.string().optional(),
+  
+  // Insured information (legacy fields)
   insuredCompanyName: z.string().optional(),
   insuredAddress: z.string().optional(),
   insuredCity: z.string().optional(),
@@ -92,7 +117,8 @@ export const formDataSchema = z.object({
     'llc', 
     'trust', 
     'nonProfit', 
-    'subchapterSCorp'
+    'subchapterSCorp',
+    'notForProfitOrg'
   ]).optional(),
   
   // Premises information
