@@ -82,24 +82,34 @@ const VoiceInterface = ({
     const envKey = import.meta.env.VITE_OPENAI_API_KEY;
     const lsKey = localStorage.getItem("openai_api_key");
     
-    console.log("API Key Status Check:", {
+    const status = {
       "OpenAI Initialized": isOpenAIInitialized(),
       "Component State (apiKeySet)": apiKeySet,
       "Environment Key Available": !!envKey,
       "Environment Key Length": envKey ? envKey.length : 0,
       "LocalStorage Key Available": !!lsKey
-    });
+    };
     
-    if (!apiKeySet && (envKey || lsKey)) {
-      if (envKey) {
-        initializeOpenAI(envKey);
-        setApiKeySet(true);
-        console.log("Manually initialized OpenAI with env key");
-      } else if (lsKey) {
-        initializeOpenAI(lsKey);
-        setApiKeySet(true);
-        console.log("Manually initialized OpenAI with localStorage key");
-      }
+    console.log("API Key Status Check:", status);
+    
+    // Force reinitialize OpenAI with env key if available
+    if (envKey && envKey.length > 10) {
+      initializeOpenAI(envKey);
+      setApiKeySet(true);
+      console.log("Manually initialized OpenAI with env key");
+      
+      // Show alert with status for debugging in production
+      setTimeout(() => {
+        alert(`OpenAI API key status updated:\n\n` + 
+              `• API Initialized: ${isOpenAIInitialized()}\n` +
+              `• Component State: ${apiKeySet}\n` +
+              `• Environment Key: ${!!envKey}\n` +
+              `• Local Storage Key: ${!!lsKey}`);
+      }, 500);
+    } else if (lsKey) {
+      initializeOpenAI(lsKey);
+      setApiKeySet(true);
+      console.log("Manually initialized OpenAI with localStorage key");
     }
     
     return isOpenAIInitialized();
@@ -111,48 +121,58 @@ const VoiceInterface = ({
     const storedApiKey = localStorage.getItem("openai_api_key");
     const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
     
-    console.log("OpenAI environment key available:", !!envApiKey);
+    console.log("VoiceInterface - OpenAI environment key available:", !!envApiKey, 
+                "length:", envApiKey ? envApiKey.length : 0);
     
     const checkAndSetApiKey = async () => {
       try {
         // First check if OpenAI is already initialized
         if (isOpenAIInitialized()) {
           setApiKeySet(true);
-          console.log("OpenAI API already initialized and ready");
+          console.log("VoiceInterface - OpenAI API already initialized and ready");
           return;
         }
         
-        // If not, try with localStorage key
+        // If not, try with environment key first (prioritize over localStorage)
+        if (envApiKey && envApiKey.length > 10) {
+          console.log("VoiceInterface - Initializing OpenAI with environment key");
+          initializeOpenAI(envApiKey);
+          setApiKeySet(true);
+          return;
+        }
+        
+        // Then try with localStorage key
         if (storedApiKey) {
+          console.log("VoiceInterface - Initializing OpenAI with localStorage key");
           initializeOpenAI(storedApiKey);
           setApiKey(storedApiKey);
           setApiKeySet(true);
-          console.log("OpenAI API key initialized from localStorage");
           return;
         }
         
-        // Finally, try with environment key
-        if (envApiKey) {
-          initializeOpenAI(envApiKey);
-          setApiKeySet(true);
-          console.log("OpenAI API key initialized from environment variables");
-          return;
-        }
-        
-        console.log("No OpenAI API key found, will prompt user to enter one");
+        console.log("VoiceInterface - No OpenAI API key found, will prompt user to enter one");
       } catch (error) {
         console.error("Error initializing OpenAI:", error);
         setApiKeySet(false);
       }
     };
     
+    // Run the check immediately
     checkAndSetApiKey();
     
-    // Run a check after a short delay to ensure all initialization has completed
+    // And also run a check after a short delay to ensure all initialization has completed
     const timer = setTimeout(() => {
       const isInitialized = checkApiKeyStatus();
+      console.log("VoiceInterface - Delayed check - OpenAI initialized:", isInitialized);
       setApiKeySet(isInitialized);
-    }, 500);
+      
+      // Force re-initialization if still not set properly
+      if (!isInitialized && envApiKey && envApiKey.length > 10) {
+        console.log("VoiceInterface - Forcing OpenAI initialization with environment key");
+        initializeOpenAI(envApiKey);
+        setApiKeySet(true);
+      }
+    }, 1000);
     
     return () => clearTimeout(timer);
   }, []);
