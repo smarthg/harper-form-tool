@@ -81,15 +81,27 @@ const VoiceInterface = ({
   useEffect(() => {
     // Check if the API key is available from environment or localStorage
     const storedApiKey = localStorage.getItem("openai_api_key");
+    const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    
+    console.log("OpenAI environment key available:", !!envApiKey);
     
     if (storedApiKey) {
       // If key is in localStorage, initialize with it
       setApiKey(storedApiKey);
       setApiKeySet(true);
       initializeOpenAI(storedApiKey);
-    } else if (isOpenAIInitialized()) {
-      // If OpenAI is already initialized with an environment key
+      console.log("OpenAI API key initialized from localStorage");
+    } else if (envApiKey) {
+      // If key is in environment variables, initialize with it
+      initializeOpenAI(envApiKey);
       setApiKeySet(true);
+      console.log("OpenAI API key initialized from environment variables");
+    } else if (isOpenAIInitialized()) {
+      // If OpenAI is already initialized by some other means
+      setApiKeySet(true);
+      console.log("OpenAI API already initialized");
+    } else {
+      console.log("No OpenAI API key found, will prompt user to enter one");
     }
   }, []);
 

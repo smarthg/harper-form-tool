@@ -1,14 +1,22 @@
 import OpenAI from 'openai';
 
 // Initialize OpenAI client with API key from environment or localStorage
+const envKey = import.meta.env.VITE_OPENAI_API_KEY;
+const localStorageKey = localStorage.getItem('openai_api_key');
+
+// Log available sources (without exposing the actual keys)
+console.log("OpenAI API key sources:", {
+  "Environment (VITE_OPENAI_API_KEY)": !!envKey,
+  "LocalStorage": !!localStorageKey
+});
+
+// Initialize the client with the first available key
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY || 
-          import.meta.env.OPENAI_API_KEY || 
-          localStorage.getItem('openai_api_key') || '',
+  apiKey: envKey || localStorageKey || '',
   dangerouslyAllowBrowser: true // Needed for client-side usage
 });
 
-// Log status of API key (without exposing the actual key)
+// Log final status of API key (without exposing the actual key)
 console.log("OpenAI API key status:", openai.apiKey ? "Available" : "Not set");
 
 /**

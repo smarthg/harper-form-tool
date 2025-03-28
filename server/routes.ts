@@ -15,6 +15,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check if developer mode is enabled
   const isDeveloperMode = process.env.DEVELOPER_MODE === 'true';
   console.log(`Developer mode: ${isDeveloperMode ? 'enabled' : 'disabled'}`);
+  
+  // Initialize OpenAI with API key from environment
+  if (process.env.OPENAI_API_KEY) {
+    initializeOpenAI(process.env.OPENAI_API_KEY);
+    console.log('OpenAI service initialized with API key from environment');
+  } else {
+    console.warn('OpenAI API key not found in environment variables');
+  }
+  
+  // Initialize Anvil with API key from environment
+  if (process.env.ANVIL_API_KEY) {
+    initializeAnvil(process.env.ANVIL_API_KEY);
+    console.log('Anvil service initialized with API key from environment');
+  } else {
+    console.warn('Anvil API key not found in environment variables');
+  }
 
   // Define auth middleware for protected routes
   // In developer mode, use a pass-through middleware

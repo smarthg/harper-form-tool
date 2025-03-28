@@ -27,6 +27,11 @@ const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
 // Set up Vite environment variables
 process.env.VITE_CLERK_PUBLISHABLE_KEY = process.env.CLERK_PUBLISHABLE_KEY;
+process.env.VITE_OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+// Log which API keys are being passed to the frontend (don't log the actual keys)
+console.log('Clerk key available:', !!process.env.VITE_CLERK_PUBLISHABLE_KEY);
+console.log('OpenAI key available:', !!process.env.VITE_OPENAI_API_KEY);
 
 const app = express();
 app.use(express.json());
