@@ -77,6 +77,34 @@ const VoiceInterface = ({
     };
   }, []);
 
+  // Function to check API key status and log it
+  const checkApiKeyStatus = () => {
+    const envKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const lsKey = localStorage.getItem("openai_api_key");
+    
+    console.log("API Key Status Check:", {
+      "OpenAI Initialized": isOpenAIInitialized(),
+      "Component State (apiKeySet)": apiKeySet,
+      "Environment Key Available": !!envKey,
+      "Environment Key Length": envKey ? envKey.length : 0,
+      "LocalStorage Key Available": !!lsKey
+    });
+    
+    if (!apiKeySet && (envKey || lsKey)) {
+      if (envKey) {
+        initializeOpenAI(envKey);
+        setApiKeySet(true);
+        console.log("Manually initialized OpenAI with env key");
+      } else if (lsKey) {
+        initializeOpenAI(lsKey);
+        setApiKeySet(true);
+        console.log("Manually initialized OpenAI with localStorage key");
+      }
+    }
+    
+    return isOpenAIInitialized();
+  };
+  
   // Check if the API key is available
   useEffect(() => {
     // Check if the API key is available from environment or localStorage
@@ -85,24 +113,48 @@ const VoiceInterface = ({
     
     console.log("OpenAI environment key available:", !!envApiKey);
     
-    if (storedApiKey) {
-      // If key is in localStorage, initialize with it
-      setApiKey(storedApiKey);
-      setApiKeySet(true);
-      initializeOpenAI(storedApiKey);
-      console.log("OpenAI API key initialized from localStorage");
-    } else if (envApiKey) {
-      // If key is in environment variables, initialize with it
-      initializeOpenAI(envApiKey);
-      setApiKeySet(true);
-      console.log("OpenAI API key initialized from environment variables");
-    } else if (isOpenAIInitialized()) {
-      // If OpenAI is already initialized by some other means
-      setApiKeySet(true);
-      console.log("OpenAI API already initialized");
-    } else {
-      console.log("No OpenAI API key found, will prompt user to enter one");
-    }
+    const checkAndSetApiKey = async () => {
+      try {
+        // First check if OpenAI is already initialized
+        if (isOpenAIInitialized()) {
+          setApiKeySet(true);
+          console.log("OpenAI API already initialized and ready");
+          return;
+        }
+        
+        // If not, try with localStorage key
+        if (storedApiKey) {
+          initializeOpenAI(storedApiKey);
+          setApiKey(storedApiKey);
+          setApiKeySet(true);
+          console.log("OpenAI API key initialized from localStorage");
+          return;
+        }
+        
+        // Finally, try with environment key
+        if (envApiKey) {
+          initializeOpenAI(envApiKey);
+          setApiKeySet(true);
+          console.log("OpenAI API key initialized from environment variables");
+          return;
+        }
+        
+        console.log("No OpenAI API key found, will prompt user to enter one");
+      } catch (error) {
+        console.error("Error initializing OpenAI:", error);
+        setApiKeySet(false);
+      }
+    };
+    
+    checkAndSetApiKey();
+    
+    // Run a check after a short delay to ensure all initialization has completed
+    const timer = setTimeout(() => {
+      const isInitialized = checkApiKeyStatus();
+      setApiKeySet(isInitialized);
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const saveApiKey = () => {
@@ -264,20 +316,29 @@ const VoiceInterface = ({
       setIsProcessing(false);
     }
   };
-
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-medium text-neutral-500">Voice Commands</h2>
-        {!isOpenAIInitialized() && (
+        <div className="flex gap-2">
           <button
-            onClick={() => setIsDialogOpen(true)}
+            onClick={checkApiKeyStatus}
             className="text-neutral-400 hover:text-primary"
-            title="API Settings"
+            title="Check API Key Status"
           >
-            <Settings size={18} />
+            <AlertCircle size={18} />
           </button>
-        )}
+          {!apiKeySet && (
+            <button
+              onClick={() => setIsDialogOpen(true)}
+              className="text-neutral-400 hover:text-primary"
+              title="API Settings"
+            >
+              <Settings size={18} />
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="mb-6">

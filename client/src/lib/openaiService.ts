@@ -7,12 +7,27 @@ const localStorageKey = localStorage.getItem('openai_api_key');
 // Log available sources (without exposing the actual keys)
 console.log("OpenAI API key sources:", {
   "Environment (VITE_OPENAI_API_KEY)": !!envKey,
-  "LocalStorage": !!localStorageKey
+  "LocalStorage": !!localStorageKey,
+  "Environment Key Length": envKey ? envKey.length : 0
 });
 
-// Initialize the client with the first available key
+// Ensure we properly extract the key from environment variables
+let apiKey = '';
+if (envKey && envKey.length > 10) {
+  // This is likely a valid API key
+  apiKey = envKey;
+  console.log("Using environment OpenAI API key");
+} else if (localStorageKey) {
+  // Use localStorage key as fallback
+  apiKey = localStorageKey;
+  console.log("Using localStorage OpenAI API key");
+} else {
+  console.warn("No valid OpenAI API key found");
+}
+
+// Initialize the client with the selected key
 const openai = new OpenAI({
-  apiKey: envKey || localStorageKey || '',
+  apiKey: apiKey,
   dangerouslyAllowBrowser: true // Needed for client-side usage
 });
 
