@@ -7,11 +7,13 @@ A modern web application that enables users to edit form fields in real-time usi
 ## Features
 
 - **Voice Command Recognition**: Edit form fields naturally by speaking commands like "Set the policy type to home" or "Change the coverage amount to $500,000"
-- **PDF Form Generation**: Export the completed form data as a professional insurance PDF document
+- **Multiple Form Support**: Dynamically handles different ACORD form types (ACORD 125, ACORD 126, etc.)
+- **PDF Form Generation**: Export the completed form data as a professional insurance PDF document with proper templates for each form type
 - **Real-time Form Updates**: See immediate updates to form fields as you speak commands
 - **Command History**: View a log of all voice commands and changes made to the form
 - **Form Download**: Export the completed form as a professionally formatted PDF document
 - **Secure Authentication**: User authentication via Clerk for secure access to forms
+- **Environment Detection**: Automatically enforces security in production environments
 - **Responsive Design**: Works seamlessly across desktop and mobile devices
 
 ## Technology Stack
@@ -39,15 +41,19 @@ A modern web application that enables users to edit form fields in real-time usi
 Create a `.env` file in the root directory with the following variables:
 
 ```
-# Clerk Authentication
+# Authentication (Clerk)
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 
-# Optional: OpenAI for enhanced transcription and form field mapping
-OPENAI_API_KEY=your_openai_api_key
+# AI Services
+VITE_OPENAI_API_KEY=your_openai_api_key  # Optional for enhanced voice recognition
+LLAMAPARSE_API_KEY=your_llamaparse_api_key  # Optional for improved PDF extraction
 
-# Required for PDF form generation
-ANVIL_API_KEY=your_anvil_api_key
+# PDF Generation
+ANVIL_API_KEY=your_anvil_api_key  # Required for PDF form generation
+
+# Application Settings
+DEVELOPER_MODE=true  # Set to true for local development, automatically set to false in production
 ```
 
 ### Installation

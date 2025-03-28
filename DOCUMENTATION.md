@@ -12,8 +12,9 @@ This document provides detailed technical information about the Voice-Controlled
 6. [Authentication & Security](#authentication--security)
 7. [Form Generation](#form-generation)
 8. [API Reference](#api-reference)
-9. [Performance Considerations](#performance-considerations)
-10. [Extending the Application](#extending-the-application)
+9. [Environment Management](#environment-management)
+10. [Performance Considerations](#performance-considerations)
+11. [Extending the Application](#extending-the-application)
 
 ## System Architecture
 
@@ -213,6 +214,79 @@ PDF form generation is handled by the `pdfGenerator.ts` module, which:
 - **Payload**: Extracted data object
 - **Response**: Updated complete form data
 
+## Environment Management
+
+The application features intelligent environment detection and configuration:
+
+### Environment Detection
+
+The server automatically detects the runtime environment and applies appropriate settings:
+
+```typescript
+// Automatic environment detection in server/index.ts
+const isProduction = process.env.REPL_ID || 
+                     process.env.NODE_ENV === 'production' ||
+                     process.env.RENDER || 
+                     process.env.VERCEL;
+
+if (isProduction) {
+  console.log('Production environment detected, forcing developer mode to false');
+  process.env.DEVELOPER_MODE = 'false';
+}
+```
+
+### Developer Mode
+
+Developer mode controls whether authentication is enforced:
+
+- When `DEVELOPER_MODE=true` (local development):
+  - Authentication checks are bypassed
+  - API endpoints are accessible without authentication
+  - Ideal for quick development and testing
+
+- When `DEVELOPER_MODE=false` (production):
+  - Full authentication via Clerk is enforced
+  - All protected routes require valid authentication
+  - Secure for production deployment
+  
+### Environment Variables
+
+The application uses these key environment variables:
+
+```
+# Authentication (Clerk)
+CLERK_PUBLISHABLE_KEY - For client-side Clerk initialization
+CLERK_SECRET_KEY - For server-side Clerk authentication
+
+# AI Services
+VITE_OPENAI_API_KEY - For enhanced voice recognition (optional)
+LLAMAPARSE_API_KEY - For improved PDF extraction (optional)
+
+# PDF Generation
+ANVIL_API_KEY - For PDF form generation with Anvil
+
+# Application Settings
+DEVELOPER_MODE - Controls authentication enforcement (auto-disabled in production)
+```
+
+### Form Type Support
+
+The application supports multiple form types:
+
+1. **ACORD 125** (Commercial Insurance Application)
+   - Form definition in `server/formDefinitions/acord125.ts`
+   - Anvil PDF template ID handling in `server/services/anvilService.ts`
+
+2. **ACORD 126** (Commercial General Liability Section)
+   - Form definition in `server/formDefinitions/acord126.ts`
+   - Specialized Anvil mapping in `mapAcord126DataToAnvilFormat()`
+
+Each form type has:
+- A dedicated form definition
+- Form-specific UI components
+- Custom PDF generation templates
+- Specialized data mapping functions
+
 ## Performance Considerations
 
 ### Client-Side Optimizations
@@ -267,4 +341,4 @@ Enhance the NLP processor in `nlpProcessor.ts` by:
 
 ---
 
-This documentation reflects the current implementation as of March 27, 2025. For the latest updates, refer to the codebase and recent commit history.
+This documentation reflects the current implementation as of March 28, 2025. For the latest updates, refer to the codebase and recent commit history.

@@ -33,16 +33,22 @@ npm install
 Create a `.env` file in the root directory with the following:
 
 ```
-# Required: Clerk Authentication
+# Authentication (Clerk)
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 
-# Optional: OpenAI for enhanced transcription
-OPENAI_API_KEY=your_openai_api_key
+# AI Services
+VITE_OPENAI_API_KEY=your_openai_api_key  # Optional for enhanced voice recognition
+LLAMAPARSE_API_KEY=your_llamaparse_api_key  # Optional for improved PDF extraction
 
-# Optional: LlamaParse for enhanced PDF extraction
-LLAMAPARSE_API_KEY=your_llamaparse_api_key
+# PDF Generation
+ANVIL_API_KEY=your_anvil_api_key  # For PDF form generation
+
+# Application Settings
+DEVELOPER_MODE=true  # Will be automatically set to false in production environments
 ```
+
+Note: When deploying to Replit or other production environments, the application will automatically detect the environment type and enforce security settings regardless of the DEVELOPER_MODE value in your `.env` file.
 
 ### 3. Start the Development Server
 
@@ -93,7 +99,8 @@ Now that you're up and running:
 
 1. Explore different voice commands (see USER_GUIDE.md for examples)
 2. Try filling out the entire form using only voice commands
-3. Generate and download a PDF of your completed form
+3. Switch between different form types (ACORD 125, ACORD 126) to see how the interface adapts
+4. Generate and download a PDF of your completed form with the proper template for your form type
 
 ## Keyboard Shortcuts
 

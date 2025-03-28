@@ -40,8 +40,9 @@ The Form Editor page consists of three main sections:
 
 ### Example Voice Commands
 
-Here are some examples of commands you can use:
+Here are some examples of commands you can use. The available commands will adapt based on the form type you're currently editing:
 
+#### For ACORD 125 Form (Commercial Insurance Application)
 - "Set the first name to John"
 - "Change the last name to Smith"
 - "Update the email to john.smith@example.com"
@@ -54,6 +55,16 @@ Here are some examples of commands you can use:
 - "Set the deductible to $500"
 - "Change the coverage type to comprehensive"
 - "Make the monthly premium $120"
+
+#### For ACORD 126 Form (Commercial General Liability Section)
+- "Set the business name to Smith Construction"
+- "Change the effective date to June 1st, 2025"
+- "Update the policy number to GL-789012"
+- "Make the general aggregate limit $2,000,000"
+- "Set the products completed operations aggregate to $1,000,000" 
+- "Change the each occurrence limit to $1,000,000"
+- "Set the deductible to $5,000"
+- "Change the personal advertising injury to $1,000,000"
 
 ### Command Structure
 

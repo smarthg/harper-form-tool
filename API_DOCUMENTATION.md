@@ -28,7 +28,8 @@ Check if the API is operational.
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "developerMode": false
 }
 ```
 
@@ -39,7 +40,7 @@ Check if the API is operational.
 
 #### `GET /api/form-data`
 
-Retrieve the current form data.
+Retrieve the default form data.
 
 **Authentication Required**: Yes
 
@@ -69,7 +70,7 @@ Retrieve the current form data.
 
 #### `PATCH /api/form-data`
 
-Update specific fields in the form data.
+Update specific fields in the default form data.
 
 **Authentication Required**: Yes
 
@@ -104,6 +105,107 @@ Update specific fields in the form data.
 **Status Codes**:
 - `200 OK`: Form data updated successfully
 - `400 Bad Request`: Invalid request body
+- `401 Unauthorized`: Authentication required
+- `500 Internal Server Error`: Server error
+
+### Form Type-Specific Endpoints
+
+#### `GET /api/form-definitions/:formType`
+
+Get the form definition for a specific form type.
+
+**Authentication Required**: Yes
+
+**Parameters**:
+- `formType`: The type of form (e.g., 'acord125', 'acord126')
+
+**Response**:
+
+```json
+{
+  "title": "ACORD 125",
+  "sections": [
+    {
+      "title": "Basic Information",
+      "fields": [
+        {
+          "id": "businessName",
+          "type": "text",
+          "label": "Business Name",
+          "required": true
+        },
+        // Additional fields...
+      ]
+    },
+    // Additional sections...
+  ]
+}
+```
+
+**Status Codes**:
+- `200 OK`: Form definition retrieved successfully
+- `400 Bad Request`: Invalid form type
+- `401 Unauthorized`: Authentication required
+- `500 Internal Server Error`: Server error
+
+#### `GET /api/form-data/:formType`
+
+Get form data for a specific form type.
+
+**Authentication Required**: Yes
+
+**Parameters**:
+- `formType`: The type of form (e.g., 'acord125', 'acord126')
+
+**Response**:
+
+```json
+{
+  "businessName": "Example Company",
+  "effectiveDate": "2025-07-01",
+  "expirationDate": "2026-07-01",
+  // Form-specific fields...
+}
+```
+
+**Status Codes**:
+- `200 OK`: Form data retrieved successfully
+- `400 Bad Request`: Invalid form type
+- `401 Unauthorized`: Authentication required
+- `500 Internal Server Error`: Server error
+
+#### `PATCH /api/form-data/:formType`
+
+Update form data for a specific form type.
+
+**Authentication Required**: Yes
+
+**Parameters**:
+- `formType`: The type of form (e.g., 'acord125', 'acord126')
+
+**Request Body**:
+
+```json
+{
+  "businessName": "Updated Company Name",
+  "effectiveDate": "2025-08-01"
+}
+```
+
+**Response**:
+
+```json
+{
+  "businessName": "Updated Company Name",
+  "effectiveDate": "2025-08-01",
+  "expirationDate": "2026-07-01",
+  // Remaining form fields...
+}
+```
+
+**Status Codes**:
+- `200 OK`: Form data updated successfully
+- `400 Bad Request`: Invalid form type or request body
 - `401 Unauthorized`: Authentication required
 - `500 Internal Server Error`: Server error
 
