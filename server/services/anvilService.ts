@@ -137,8 +137,21 @@ export function storePdfTemporarily(filledPdf: Buffer, formType: string = 'acord
   const timestamp = new Date().getTime();
   const filename = `${formType}_filled_${timestamp}.pdf`;
   
-  // Create directory if it doesn't exist
-  const uploadDir = path.join(currentDirPath, '../../client/public/uploads');
+  // Find the public directory path that will work both locally and in deployment
+  // In Replit, we need to ensure we're using a path that will be accessible from the web
+  let publicDir = '';
+  
+  // Check if we're running in Replit deployment
+  if (process.env.REPL_ID) {
+    // In Replit, use an absolute path to ensure it works in deployment
+    publicDir = path.resolve(process.cwd(), 'public');
+  } else {
+    // For local development, use the previous relative path
+    publicDir = path.join(currentDirPath, '../../client/public');
+  }
+  
+  // Create uploads directory under the public directory
+  const uploadDir = path.join(publicDir, 'uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -148,6 +161,9 @@ export function storePdfTemporarily(filledPdf: Buffer, formType: string = 'acord
   
   // Write the filled PDF to the file
   fs.writeFileSync(filePath, filledPdf);
+  
+  // Log the storage location for debugging
+  console.log('PDF saved to:', filePath);
   
   // Return the URL to download the filled PDF
   return `/uploads/${filename}`;
