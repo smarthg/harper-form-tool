@@ -82,23 +82,20 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
 /**
  * Process a command using OpenAI's API to extract intent
  * @param text The text to process
+ * @param formType Optional form type to specify which fields to focus on ('acord125' or 'acord126')
  * @returns Object with field and value
  */
-export async function processCommandWithAI(text: string): Promise<{ field: string, value: string } | null> {
+export async function processCommandWithAI(text: string, formType?: string): Promise<{ field: string, value: string } | null> {
   if (!openai.apiKey) {
     throw new Error('OpenAI API key not provided. Please set an API key first.');
   }
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful assistant that extracts intent from user commands for an ACORD 125 Commercial Insurance Application.
-          
-          The form has the following fields:
-          # ACORD 125 Commercial Insurance Form Fields
+    // Determine which field definitions to include based on form type
+    let fieldDefinitions = '';
+    
+    // Always include ACORD 125 fields (our base form)
+    fieldDefinitions += `# ACORD 125 Commercial Insurance Form Fields
           - namedInsured: The name of the insured company
           - businessPhone: Business phone number
           - email: Email address
@@ -124,7 +121,7 @@ export async function processCommandWithAI(text: string): Promise<{ field: strin
           - proposedEffDate: Proposed effective date of the policy
           - proposedExpDate: Proposed expiration date of the policy
           
-          # Additional Form Fields
+          # Basic Form Fields
           - firstName: First name (personal info)
           - lastName: Last name (personal info) 
           - phone: Phone number
@@ -133,7 +130,45 @@ export async function processCommandWithAI(text: string): Promise<{ field: strin
           - startDate: Policy start date
           - endDate: Policy end date
           - coverageType: Type of coverage (comprehensive, collision, liability, uninsured)
-          - monthlyPremium: Monthly payment amount
+          - monthlyPremium: Monthly payment amount`;
+    
+    // Add ACORD 126 fields if that form type is specified
+    if (formType === 'acord126') {
+      fieldDefinitions += `
+          
+          # ACORD 126 Commercial General Liability Form Fields
+          - agencyCustomerId: Agency's ID for the customer
+          - effectiveDate: Date when the coverage begins
+          - expirationDate: Date when the coverage ends
+          - producerName: Name of the producer
+          - carrierName: Name of the insurance carrier
+          - policyNumber: Policy identification number
+          - namedInsured: Name of the insured business or individual
+          - mailingAddress: Mailing address of the insured
+          - premisesOperations: Coverage limit for premises operations
+          - productsCompletedOperations: Coverage limit for products/completed operations
+          - personalAndAdvertisingInjury: Coverage limit for personal & advertising injury
+          - eachOccurrence: Coverage limit for each occurrence
+          - damageToPremisesRented: Coverage limit for damage to rented premises
+          - medicalExpense: Coverage limit for medical expenses
+          - generalAggregate: Coverage limit for general aggregate
+          - occurrenceForm: Whether the policy uses occurrence form (true/false)
+          - claimsMadeForm: Whether the policy uses claims-made form (true/false)
+          - retro: Retroactive date for claims-made form
+          - premises: Description of premises
+          - classification: Classification code
+          - additionalInterests: Names of additional interests`;
+    }
+    
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful assistant that extracts intent from user commands for an insurance form application.
+          
+          The form has the following fields:
+          ${fieldDefinitions}
           
           Examples:
           - "Change the deductible to $2,000" → { "field": "deductible", "value": "2000" }

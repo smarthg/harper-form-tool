@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Settings, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
+import { Mic, MicOff, Settings, ChevronRight, CheckCircle, AlertCircle, Send } from "lucide-react";
 import { transcribeAudio, processCommandWithAI, isOpenAIInitialized, initializeOpenAI } from "@/lib/openaiService";
 import AudioRecorderPolyfill from 'audio-recorder-polyfill';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ interface VoiceInterfaceProps {
   setTranscript: (transcript: string) => void;
   onCommand: (field: string, value: string, command: string) => void;
   lastCommand: { type: "success" | "error"; message: string } | null;
+  formType?: 'acord125' | 'acord126';
 }
 
 const VoiceInterface = ({
@@ -23,9 +24,11 @@ const VoiceInterface = ({
   setTranscript,
   onCommand,
   lastCommand,
+  formType = 'acord125',
 }: VoiceInterfaceProps) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [manualInput, setManualInput] = useState<string>("");
   const [apiKey, setApiKey] = useState<string>("");
   const [apiKeySet, setApiKeySet] = useState<boolean>(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -169,8 +172,8 @@ const VoiceInterface = ({
           const text = await transcribeAudio(audioBlob);
           setTranscript(text);
 
-          // Process command with OpenAI
-          const result = await processCommandWithAI(text);
+          // Process command with OpenAI using the current form type
+          const result = await processCommandWithAI(text, formType);
           
           if (result) {
             onCommand(result.field, result.value, text);
@@ -216,6 +219,37 @@ const VoiceInterface = ({
       stopListening();
     } else {
       startListening();
+    }
+  };
+  
+  /**
+   * Process a manually typed command
+   */
+  const handleManualCommand = async () => {
+    if (!manualInput.trim() || !apiKeySet) return;
+
+    setIsProcessing(true);
+    setErrorMsg(null);
+      
+    try {
+      // Process the command with OpenAI
+      const text = manualInput.trim();
+      setTranscript(text);
+      
+      // Process command with OpenAI using the current form type
+      const result = await processCommandWithAI(text, formType);
+      
+      if (result) {
+        onCommand(result.field, result.value, text);
+        setManualInput(''); // Clear the input field after successful processing
+      } else {
+        setErrorMsg("Couldn't understand that command. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Error processing manual command:", error);
+      setErrorMsg(`Error: ${error.message || "Something went wrong"}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -292,22 +326,64 @@ const VoiceInterface = ({
       <div className="mb-6 p-4 bg-neutral-100 rounded-lg">
         <h3 className="text-sm font-medium text-neutral-400 mb-2">Try saying:</h3>
         <ul className="text-sm text-neutral-400 space-y-2">
-          <li className="flex items-start">
-            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Set the business name to ABC Construction"
-          </li>
-          <li className="flex items-start">
-            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Update the email to contact@example.com"
-          </li>
-          <li className="flex items-start">
-            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Change the mailing address to 123 Main Street"
-          </li>
-          <li className="flex items-start">
-            <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
-            "Set the business type to LLC"
-          </li>
+          {formType === 'acord125' ? (
+            <>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set the business name to ABC Construction"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Update the email to contact@example.com"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Change the mailing address to 123 Main Street"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set the business type to LLC"
+              </li>
+            </>
+          ) : formType === 'acord126' ? (
+            <>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set the each occurrence limit to $1,000,000"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Update the general aggregate to $2,000,000"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Change the medical expense to $5,000"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set occurrence form to true"
+              </li>
+            </>
+          ) : (
+            <>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set the business name to ABC Construction"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Update the email to contact@example.com"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Change the mailing address to 123 Main Street"
+              </li>
+              <li className="flex items-start">
+                <ChevronRight className="text-primary h-4 w-4 mr-2 mt-0.5" />
+                "Set the business type to LLC"
+              </li>
+            </>
+          )}
         </ul>
       </div>
       
@@ -318,6 +394,36 @@ const VoiceInterface = ({
           <p className={`text-sm ${transcript ? 'text-neutral-500' : 'text-neutral-400 italic'}`}>
             {transcript || "Your voice input will appear here..."}
           </p>
+        </div>
+        
+        {/* Manual command input */}
+        <div className="flex items-center gap-2 mb-3">
+          <Input
+            placeholder="Type a command manually..."
+            value={manualInput}
+            onChange={(e) => setManualInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && manualInput.trim() && !isProcessing) {
+                e.preventDefault();
+                handleManualCommand();
+              }
+            }}
+            disabled={isProcessing || !apiKeySet}
+            className="flex-1"
+          />
+          <Button 
+            onClick={handleManualCommand}
+            disabled={!manualInput.trim() || isProcessing || !apiKeySet}
+            size="sm"
+            className="h-10"
+          >
+            {isProcessing ? (
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+            ) : (
+              <Send className="h-4 w-4 mr-2" />
+            )}
+            Send
+          </Button>
         </div>
         
         {(lastCommand || errorMsg) && (

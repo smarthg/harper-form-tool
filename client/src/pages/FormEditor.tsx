@@ -24,6 +24,7 @@ const FormEditor = () => {
   const [highlightedField, setHighlightedField] = useState<string | null>(null);
   const [activityLog, setActivityLog] = useState<ActivityItem[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | undefined>(undefined);
+  const [activeFormType, setActiveFormType] = useState<'acord125' | 'acord126'>('acord125');
   const [lastCommand, setLastCommand] = useState<{
     type: "success" | "error";
     message: string;
@@ -225,7 +226,7 @@ const FormEditor = () => {
       };
       setActivityLog((prev) => [newActivity, ...prev]);
 
-      // For ACORD 125 form fields, update the ACORD 125 form data specifically
+      // Define fields for each form type
       const acord125Fields = [
         'namedInsured', 'businessPhone', 'email', 'feinOrSocSec', 'websiteAddress', 
         'mailingAddress', 'mailingCity', 'mailingState', 'mailingZipCode', 
@@ -233,7 +234,16 @@ const FormEditor = () => {
         'dateBusinessStarted', 'annualGrossSales', 'numEmployees', 'deductible', 'coverageAmount'
       ];
       
-      if (acord125Fields.includes(field)) {
+      const acord126Fields = [
+        'agencyCustomerId', 'effectiveDate', 'expirationDate', 'producerName', 'carrierName', 
+        'policyNumber', 'namedInsured', 'premisesOperations', 'productsCompletedOperations',
+        'personalAndAdvertisingInjury', 'eachOccurrence', 'damageToPremisesRented',
+        'medicalExpense', 'generalAggregate', 'occurrenceForm', 'claimsMadeForm',
+        'retro', 'premises', 'classification', 'additionalInterests'
+      ];
+      
+      // Determine which API endpoint to use based on the field and current active form
+      if (acord125Fields.includes(field) || activeFormType === 'acord125') {
         // Update ACORD 125 form data
         await apiRequest("/api/form-data/acord125", {
           method: "PATCH",
@@ -242,13 +252,28 @@ const FormEditor = () => {
             "Content-Type": "application/json"
           }
         });
+        
+        // Refresh ACORD 125 form data
+        queryClient.invalidateQueries({ queryKey: ["/api/form-data/acord125"] });
+      } else if (acord126Fields.includes(field) || activeFormType === 'acord126') {
+        // Update ACORD 126 form data
+        await apiRequest("/api/form-data/acord126", {
+          method: "PATCH",
+          body: JSON.stringify({ [field]: value }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        
+        // Refresh ACORD 126 form data
+        queryClient.invalidateQueries({ queryKey: ["/api/form-data/acord126"] });
       } else {
         // Update the main form data
         await updateFormMutation.mutateAsync({ field, value });
+        
+        // Refresh main form data
+        queryClient.invalidateQueries({ queryKey: ["/api/form-data"] });
       }
-
-      // Refresh form data
-      queryClient.invalidateQueries({ queryKey: ["/api/form-data/acord125"] });
 
       // Clear highlight after 3 seconds
       setTimeout(() => {
@@ -323,7 +348,29 @@ const FormEditor = () => {
       annualGrossSales: "Annual Revenue",
       numEmployees: "Number of Employees",
       naics: "NAICS Code",
-      sic: "SIC Code"
+      sic: "SIC Code",
+      
+      // ACORD 126 form fields
+      agencyCustomerId: "Agency Customer ID",
+      effectiveDate: "Effective Date",
+      expirationDate: "Expiration Date",
+      producerName: "Producer Name",
+      carrierName: "Carrier Name",
+      eachOccurrence: "Each Occurrence Limit",
+      damageToRentedPremises: "Damage to Rented Premises",
+      medicalExpense: "Medical Expense",
+      personalAndAdvertisingInjury: "Personal & Advertising Injury",
+      generalAggregate: "General Aggregate",
+      productsCompletedOperations: "Products/Completed Operations",
+      occurrenceForm: "Occurrence Form",
+      claimsMadeForm: "Claims Made Form",
+      retro: "Retroactive Date",
+      premises: "Premises",
+      classification: "Classification",
+      additionalInterests: "Additional Interests",
+      premisesOperations: "Premises Operations",
+      limitAppliesPer: "Limit Applies Per",
+      productsCompletedOperationsAggregate: "Products/Completed Operations Aggregate"
     };
     return labels[fieldId] || fieldId;
   };
@@ -383,6 +430,7 @@ const FormEditor = () => {
             formData={formData}
             highlightedField={highlightedField}
             isPending={updateFormMutation.isPending}
+            onFormTypeChange={setActiveFormType}
           />
         </div>
 
@@ -394,6 +442,7 @@ const FormEditor = () => {
             setTranscript={setTranscript}
             onCommand={handleFieldUpdate}
             lastCommand={lastCommand}
+            formType={activeFormType}
           />
 
           <ActivityLog activities={activityLog} getFieldLabel={getFieldLabel} />

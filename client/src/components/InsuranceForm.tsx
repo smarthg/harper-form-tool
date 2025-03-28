@@ -8,10 +8,22 @@ interface InsuranceFormProps {
   formData: FormDataType;
   highlightedField: string | null;
   isPending: boolean;
+  onFormTypeChange?: (formType: 'acord125' | 'acord126') => void;
 }
 
-const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormProps) => {
-  const [activeFormType, setActiveFormType] = useState<string>('acord125');
+const InsuranceForm = ({ formData, highlightedField, isPending, onFormTypeChange }: InsuranceFormProps) => {
+  const [activeFormType, setActiveFormType] = useState<'acord125' | 'acord126'>('acord125');
+  
+  // Notify parent component when form type changes
+  const handleFormTypeChange = (formType: string) => {
+    const typedFormType = formType as 'acord125' | 'acord126';
+    setActiveFormType(typedFormType);
+    
+    // Call the callback if provided
+    if (onFormTypeChange) {
+      onFormTypeChange(typedFormType);
+    }
+  };
 
   const handleValueChange = async (field: string, value: any) => {
     try {
@@ -67,7 +79,7 @@ const InsuranceForm = ({ formData, highlightedField, isPending }: InsuranceFormP
 
   return (
     <div className="container mx-auto p-4">
-      <Tabs defaultValue="acord125" onValueChange={setActiveFormType} className="w-full">
+      <Tabs defaultValue="acord125" onValueChange={handleFormTypeChange} className="w-full">
         <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
           <TabsTrigger value="acord125">ACORD 125</TabsTrigger>
           <TabsTrigger value="acord126">ACORD 126</TabsTrigger>
