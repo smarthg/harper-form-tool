@@ -1,80 +1,75 @@
-import { Link } from "wouter";
-import { UserButton } from "@clerk/clerk-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
-import harperLogo from "../assets/harper-logo.svg";
+import { useClerk, useUser } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, User } from 'lucide-react';
 
 export function Header() {
+  const { signOut } = useClerk();
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded) {
+    return <div className="h-16 border-b"></div>;
+  }
+
+  const initials = user
+    ? `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`
+    : '';
+
   return (
-    <header className="border-b shadow-sm bg-white">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/">
-            <a className="flex items-center">
-              <img src={harperLogo} alt="HarperInsure Logo" className="h-10" />
-            </a>
-          </Link>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/">
-            <a className="text-sm font-medium transition-colors hover:text-primary">
-              Dashboard
-            </a>
-          </Link>
-          <Link href="/form-editor">
-            <a className="text-sm font-medium transition-colors hover:text-primary">
-              Form Editor
-            </a>
-          </Link>
-          <Link href="/about">
-            <a className="text-sm font-medium transition-colors hover:text-primary">
-              About
-            </a>
-          </Link>
-          <div className="ml-4">
-            <UserButton afterSignOutUrl="/" />
-          </div>
-        </nav>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
+    <header className="h-16 border-b px-4 flex items-center justify-between">
+      <div className="font-semibold text-lg">Voice Form Editor</div>
+      
+      {user && (
+        <div className="flex items-center gap-4">
+          <span className="text-sm hidden sm:inline-block">
+            {user.firstName} {user.lastName}
+          </span>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.imageUrl} alt={`${user.firstName} ${user.lastName}`} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <nav className="flex flex-col space-y-4 mt-6">
-                <Link href="/">
-                  <a className="text-sm font-medium transition-colors hover:text-primary">
-                    Dashboard
-                  </a>
-                </Link>
-                <Link href="/form-editor">
-                  <a className="text-sm font-medium transition-colors hover:text-primary">
-                    Form Editor
-                  </a>
-                </Link>
-                <Link href="/about">
-                  <a className="text-sm font-medium transition-colors hover:text-primary">
-                    About
-                  </a>
-                </Link>
-                <div className="pt-4">
-                  <UserButton afterSignOutUrl="/" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.emailAddresses[0]?.emailAddress}
+                  </p>
                 </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => signOut()}
+                className="text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
+      )}
     </header>
   );
 }
-
-export default Header;
