@@ -7,6 +7,19 @@ import * as dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
 
+// Check if we're in a production environment
+const isProduction = process.env.NODE_ENV === 'production' || 
+                    process.env.REPL_SLUG !== undefined;
+
+// Force developer mode to false in production
+if (isProduction) {
+  console.log('Production environment detected, forcing developer mode to false');
+  process.env.DEVELOPER_MODE = 'false';
+} else {
+  // In local development, use the value from .env
+  console.log('Development environment detected, using developer mode from .env');
+}
+
 // Initialize Clerk with your API key
 const clerk = Clerk({ secretKey: process.env.CLERK_SECRET_KEY });
 
