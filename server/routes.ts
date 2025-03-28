@@ -21,6 +21,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const requireAuth = isDeveloperMode 
     ? (req: Request, res: Response, next: NextFunction) => next() 
     : ClerkExpressRequireAuth();
+    
+  // Add an endpoint to get Clerk publishable key for client
+  app.get('/api/config', (req, res) => {
+    res.json({
+      clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '',
+      developerMode: isDeveloperMode
+    });
+  });
 
   // Public health check endpoint
   app.get("/api/health", (req, res) => {
