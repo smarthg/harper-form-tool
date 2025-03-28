@@ -1,0 +1,11 @@
+<svg width="240" height="60" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background shield shape -->
+  <path d="M50 5 C30 5 10 15 10 30 C10 45 30 55 50 55 C70 55 90 45 90 30 C90 15 70 5 50 5 Z" fill="#1E5D9A"/>
+  
+  <!-- Letter H -->
+  <path d="M35 15 V45 M35 30 H65 M65 15 V45" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Text -->
+  <text x="100" y="33" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1E5D9A">HarperInsure</text>
+  <text x="100" y="48" font-family="Arial, sans-serif" font-size="12" fill="#555555">Insurance Solutions</text>
+</svg>
